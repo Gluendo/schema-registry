@@ -1,17 +1,23 @@
 import Link from "next/link";
-import { getDomains } from "@/lib/schemas";
+import { getDomains, getAllSchemas } from "@/lib/schemas";
+import { SearchBar } from "@/components/layout/SearchBar";
 
 export default function HomePage() {
   const domains = getDomains();
+  const schemaCount = getAllSchemas().length;
 
   return (
     <div>
       <div className="mb-8">
         <h1 className="text-3xl font-bold text-gray-900">Schema Catalog</h1>
         <p className="mt-2 text-gray-600">
-          Browse canonical schemas by domain. Each schema defines the data
-          contract for an entity on the integration platform.
+          {domains.length} domains, {schemaCount} schemas. Browse by domain or
+          search.
         </p>
+      </div>
+
+      <div className="mb-8">
+        <SearchBar />
       </div>
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
