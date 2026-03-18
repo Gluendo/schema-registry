@@ -1,3 +1,4 @@
+import Link from "next/link";
 import type { PropertyInfo } from "@/lib/types";
 import { TypeBadge } from "./TypeBadge";
 import { EnumValues } from "./EnumValues";
@@ -21,7 +22,12 @@ function PropertyRow({
         <td className="py-2 px-3">
           <TypeBadge type={prop.type} />
           {prop.typeName && (
-            <span className="ml-1.5 text-xs text-purple-600 font-medium">{prop.typeName}</span>
+            <Link
+              href={`/commons#${prop.typeName.toLowerCase().replace(/\s+/g, "-")}`}
+              className="ml-1.5 text-xs text-purple-600 dark:text-purple-400 font-medium hover:underline"
+            >
+              {prop.typeName}
+            </Link>
           )}
           {prop.format && !prop.typeName && (
             <span className="ml-1.5 text-xs text-gray-500 dark:text-gray-400">{prop.format}</span>

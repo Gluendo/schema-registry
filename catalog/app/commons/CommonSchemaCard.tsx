@@ -34,7 +34,10 @@ export function CommonSchemaCard({
       : rawType ?? "schema";
 
   return (
-    <div className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden">
+    <div
+      id={schema.title.toLowerCase().replace(/\s+/g, "-")}
+      className="bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg overflow-hidden scroll-mt-20"
+    >
       <button
         onClick={() => setExpanded(!expanded)}
         className="w-full px-5 py-4 flex items-start justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
