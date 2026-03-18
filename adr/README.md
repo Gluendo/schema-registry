@@ -18,3 +18,4 @@ ADRs document the key architectural decisions made during the design and evoluti
 | [008](008-event-patterns.md) | Event patterns and their relationship to schemas | Accepted |
 | [009](009-audience-segmentation.md) | Audience segmentation via projection profiles (policy-as-code) | Accepted |
 | [010](010-runtime-validation-strategy.md) | Runtime validation strategy | Accepted |
+| [011](011-schema-catalog-app.md) | Schema catalog application for discoverability and serving | Accepted |
