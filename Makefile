@@ -34,6 +34,22 @@ dev: bundle
 build: bundle
 	cd catalog && npm run build
 
+# Demo (NATS + producer/consumers)
+demo-up:
+	$(MAKE) -C demo up
+
+demo-down:
+	$(MAKE) -C demo down
+
+demo-setup:
+	$(MAKE) -C demo setup
+
+demo-produce:
+	$(MAKE) -C demo produce
+
+demo-produce-invalid:
+	$(MAKE) -C demo produce-invalid
+
 # Clean generated files
 clean:
 	rm -rf dist catalog/.next catalog/out catalog/public/schemas
