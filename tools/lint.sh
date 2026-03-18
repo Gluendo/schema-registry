@@ -23,5 +23,6 @@ if [ ${#files[@]} -eq 0 ]; then
   exit 0
 fi
 
-vacuum lint -k -r "$RULESET" --no-style --fail-severity error "${files[@]}"
+# --ignore-rule: $ref resolution handled by schema-tools.py, vacuum can't resolve deep relative paths
+vacuum lint -k -r "$RULESET" --no-style --fail-severity error --ignore-rule resolving-references "${files[@]}"
 echo "==> All schemas pass linting"

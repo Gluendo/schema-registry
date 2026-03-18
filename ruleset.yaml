@@ -1,9 +1,5 @@
 rules:
 
-  # --- Disable built-in rules ---
-  # $ref resolution is handled by schema-tools.py refs command
-  resolving-references: off
-
   # --- JSON Schema validity ---
 
   schema-has-schema-keyword:
