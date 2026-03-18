@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:gluendo:schema:{{domain}}:{{entity}}:v1.0.0",
+  "title": "{{Entity Name}}",
+  "description": "Canonical representation of a {{entity}} entity. Describe when and by whom this entity is produced.",
+  "type": "object",
+  "required": ["{{entity}}Id"],
+  "properties": {
+    "{{entity}}Id": {
+      "type": "string",
+      "description": "Unique identifier for the {{entity}}"
+    }
+  }
+}

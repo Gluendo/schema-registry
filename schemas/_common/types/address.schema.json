@@ -1,0 +1,33 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:gluendo:schema:_common:types:address",
+  "title": "Address",
+  "description": "A postal address following a simplified international format",
+  "type": "object",
+  "required": [
+    "country"
+  ],
+  "properties": {
+    "streetAddress": {
+      "type": "string",
+      "description": "Street name, number, and any additional line (apt, suite, etc.)"
+    },
+    "city": {
+      "type": "string",
+      "description": "City or locality name"
+    },
+    "stateOrProvince": {
+      "type": "string",
+      "description": "State, province, region, or equivalent administrative division"
+    },
+    "postalCode": {
+      "type": "string",
+      "description": "Postal or ZIP code"
+    },
+    "country": {
+      "$ref": "../enums/country-code-alpha2.schema.json",
+      "description": "ISO 3166-1 alpha-2 country code"
+    }
+  }
+}
+

@@ -1,0 +1,13 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:gluendo:schema:_common:types:etag",
+  "title": "ETag",
+  "description": "An HTTP entity tag as defined in RFC 7232, used for cache validation, conditional requests, and optimistic concurrency in delta events (ADR-008)",
+  "type": "string",
+  "pattern": "^W/\"[^\"]*\"$|^\"[^\"]*\"$",
+  "examples": [
+    "\"686897696a7c876b7e\"",
+    "W/\"123456789\""
+  ]
+}
+

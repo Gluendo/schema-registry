@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:gluendo:schema:_common:types:uuid",
+  "title": "UUID",
+  "description": "A universally unique identifier (RFC 4122)",
+  "type": "string",
+  "format": "uuid",
+  "examples": [
+    "14b26347-4eb3-4fda-960f-1d77dbd078ca"
+  ]
+}
+

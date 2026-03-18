@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:gluendo:schema:_common:types:tracestate",
+  "title": "TraceState",
+  "description": "W3C Trace Context tracestate header (https://www.w3.org/TR/trace-context/#tracestate-header). Vendor-specific trace data as comma-separated key=value pairs.",
+  "type": "string",
+  "pattern": "^[a-z0-9_\\-*/=]+(@[a-z0-9_\\-*/=]+)?(,[a-z0-9_\\-*/=]+(@[a-z0-9_\\-*/=]+)?)*$",
+  "examples": [
+    "gluendo=abc123,otel=ff00ff"
+  ]
+}
+

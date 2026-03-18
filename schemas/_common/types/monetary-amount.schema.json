@@ -1,0 +1,22 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:gluendo:schema:_common:types:monetary-amount",
+  "title": "Monetary Amount",
+  "description": "A monetary value with its currency, following ISO 4217",
+  "type": "object",
+  "required": [
+    "amount",
+    "currency"
+  ],
+  "properties": {
+    "amount": {
+      "type": "number",
+      "description": "The monetary value. Use the currency's standard decimal precision (e.g., 2 decimals for EUR/USD)"
+    },
+    "currency": {
+      "$ref": "../enums/currency-code.schema.json",
+      "description": "ISO 4217 currency code"
+    }
+  }
+}
+

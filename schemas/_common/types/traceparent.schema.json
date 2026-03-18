@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:gluendo:schema:_common:types:traceparent",
+  "title": "TraceParent",
+  "description": "W3C Trace Context traceparent header (https://www.w3.org/TR/trace-context/#traceparent-header). Format: version-trace_id-parent_id-trace_flags.",
+  "type": "string",
+  "pattern": "^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$",
+  "examples": [
+    "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01"
+  ]
+}
+

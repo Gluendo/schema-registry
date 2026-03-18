@@ -1,0 +1,20 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:gluendo:schema:_common:types:contact-info",
+  "title": "Contact Information",
+  "description": "Contact details for a person or organization",
+  "type": "object",
+  "properties": {
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Primary email address"
+    },
+    "phoneNumber": {
+      "type": "string",
+      "description": "Phone number in E.164 format (e.g., +33612345678)",
+      "pattern": "^\\+[1-9]\\d{1,14}$"
+    }
+  }
+}
+

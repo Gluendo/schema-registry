@@ -1,0 +1,41 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:gluendo:schema:_common:types:tags",
+  "title": "Tags",
+  "description": "A collection of key-value metadata tags for categorization and filtering",
+  "type": "array",
+  "maxItems": 50,
+  "items": {
+    "type": "object",
+    "required": [
+      "key",
+      "value"
+    ],
+    "properties": {
+      "key": {
+        "type": "string",
+        "description": "Tag key: alphanumeric, hyphens, and underscores allowed",
+        "pattern": "^[a-zA-Z0-9_-]{1,64}$",
+        "maxLength": 64
+      },
+      "value": {
+        "type": "string",
+        "description": "Tag value",
+        "maxLength": 256
+      }
+    }
+  },
+  "examples": [
+    [
+      {
+        "key": "env",
+        "value": "production"
+      },
+      {
+        "key": "cost-center",
+        "value": "engineering-platform"
+      }
+    ]
+  ]
+}
+

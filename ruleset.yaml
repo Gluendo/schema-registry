@@ -1,0 +1,86 @@
+rules:
+
+  # --- JSON Schema validity ---
+
+  schema-has-schema-keyword:
+    description: "Every schema must declare $schema"
+    given: "$"
+    severity: error
+    then:
+      field: "$schema"
+      function: truthy
+    howToFix: "Add \"$schema\": \"https://json-schema.org/draft/2020-12/schema\" at the top level"
+
+  schema-draft-2020-12:
+    description: "Schemas must use JSON Schema draft 2020-12"
+    given: "$"
+    severity: error
+    then:
+      field: "$schema"
+      function: pattern
+      functionOptions:
+        match: "^https://json-schema\\.org/draft/2020-12/schema$"
+    howToFix: "Set $schema to \"https://json-schema.org/draft/2020-12/schema\""
+
+  # --- Required metadata ---
+
+  schema-has-id:
+    description: "Every schema must have a $id"
+    given: "$"
+    severity: error
+    then:
+      field: "$id"
+      function: truthy
+    howToFix: "Add a $id using URN format: urn:gluendo:schema:{domain}:{entity}:{version}"
+
+  schema-id-is-urn:
+    description: "$id must use URN format"
+    given: "$"
+    severity: error
+    then:
+      field: "$id"
+      function: pattern
+      functionOptions:
+        match: "^urn:"
+    howToFix: "Use URN format for $id, e.g. urn:gluendo:schema:hr:employee:v1.0.0"
+
+  schema-has-title:
+    description: "Every schema must have a title"
+    given: "$"
+    severity: error
+    then:
+      field: "title"
+      function: truthy
+    howToFix: "Add a human-readable title to the schema"
+
+  schema-has-description:
+    description: "Every schema must have a description"
+    given: "$"
+    severity: error
+    then:
+      field: "description"
+      function: truthy
+    howToFix: "Add a description explaining what this entity represents and who produces it"
+
+  # --- Naming conventions ---
+
+  property-names-camel-case:
+    description: "Property names must use camelCase"
+    given: "$.properties[*]~"
+    severity: warn
+    then:
+      function: casing
+      functionOptions:
+        type: camel
+    howToFix: "Rename the property to use camelCase (e.g., firstName, not first_name)"
+
+  # --- Enum conventions ---
+
+  enum-has-description:
+    description: "Enum fields should have a description"
+    given: "$..enum^"
+    severity: warn
+    then:
+      field: "description"
+      function: truthy
+    howToFix: "Add a description to the enum field, or prefer oneOf/const for self-documenting values (ADR-004)"

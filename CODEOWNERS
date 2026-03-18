@@ -1,0 +1,19 @@
+# Schema Registry Code Owners
+# See: https://docs.github.com/en/repositories/managing-your-repositorys-settings-and-features/customizing-your-repository/about-code-owners
+
+# Default: platform team reviews everything
+* @Gluendo/platform
+
+# Common types require platform team review
+/schemas/_common/ @Gluendo/platform
+
+# Domain ownership — uncomment and assign as teams are onboarded
+# /schemas/domains/hr/          @Gluendo/platform @hr-team
+# /schemas/domains/finance/     @Gluendo/platform @finance-team
+# /schemas/domains/supply-chain/ @Gluendo/platform @supply-chain-team
+
+# ADRs require platform team review
+/adr/ @Gluendo/platform
+
+# Tooling and CI require platform team review
+/tools/ @Gluendo/platform

@@ -1,0 +1,40 @@
+name: Validate Schemas
+
+on:
+  pull_request:
+    paths:
+      - 'schemas/**'
+      - 'ruleset.yaml'
+  push:
+    branches: [main]
+    paths:
+      - 'schemas/**'
+      - 'ruleset.yaml'
+
+jobs:
+  validate:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Install Vacuum
+        run: |
+          curl -fsSL https://quobix.com/scripts/install_vacuum.sh | sh
+          sudo mv vacuum /usr/local/bin/
+
+      - name: Validate JSON syntax
+        run: ./tools/validate-json.sh
+
+      - name: Check JSON formatting
+        run: ./tools/format-json.sh schemas --check
+
+      - name: Validate $ref targets
+        run: ./tools/validate-refs.sh
+
+      - name: Lint schemas with Vacuum
+        run: ./tools/lint.sh
