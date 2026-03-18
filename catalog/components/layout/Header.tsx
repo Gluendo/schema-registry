@@ -20,6 +20,12 @@ export function Header() {
           <Link href="/dependencies" className="text-gray-600 hover:text-gray-900">
             Dependencies
           </Link>
+          <Link href="/playground" className="text-gray-600 hover:text-gray-900">
+            Playground
+          </Link>
+          <Link href="/changelog" className="text-gray-600 hover:text-gray-900">
+            Changelog
+          </Link>
         </nav>
       </div>
     </header>

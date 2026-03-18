@@ -3,14 +3,16 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "python3 ../tools/schema-tools.py bundle ../schemas ../dist && mkdir -p public/schemas && cp -r ../dist/domains ../dist/_common public/schemas/",
-    "predev": "python3 ../tools/schema-tools.py bundle ../schemas ../dist && mkdir -p public/schemas && cp -r ../dist/domains ../dist/_common public/schemas/",
+    "prebuild": "python3 ../tools/schema-tools.py bundle ../schemas ../dist && mkdir -p public/schemas && cp -r ../dist/domains ../dist/_common public/schemas/ && node scripts/generate-feed.mjs",
+    "predev": "python3 ../tools/schema-tools.py bundle ../schemas ../dist && mkdir -p public/schemas && cp -r ../dist/domains ../dist/_common public/schemas/ && node scripts/generate-feed.mjs",
     "dev": "next dev",
     "build": "next build",
     "start": "next start",
     "lint": "eslint"
   },
   "dependencies": {
+    "ajv": "^8.18.0",
+    "ajv-formats": "^3.0.1",
     "fuse.js": "^7.1.0",
     "next": "16.1.7",
     "react": "19.2.3",

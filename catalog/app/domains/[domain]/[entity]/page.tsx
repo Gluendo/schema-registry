@@ -68,6 +68,12 @@ export default async function EntityPage({
               {v === latestVersion && " (latest)"}
             </Link>
           ))}
+          <Link
+            href={`/domains/${domain}/${entity}/compare`}
+            className="ml-2 px-2 py-0.5 rounded text-xs bg-yellow-100 text-yellow-800 hover:bg-yellow-200"
+          >
+            Compare
+          </Link>
         </div>
       )}
 

@@ -36,8 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
-# generated schemas (copied from dist/ at build time)
+# generated at build time
 /public/schemas
+/public/feed.xml
 
 # typescript
 *.tsbuildinfo
