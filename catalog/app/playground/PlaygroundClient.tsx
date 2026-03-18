@@ -3,6 +3,7 @@
 import { useState, useCallback } from "react";
 import Ajv from "ajv";
 import addFormats from "ajv-formats";
+import { JsonEditor } from "@/components/ui/JsonEditor";
 
 interface SchemaOption {
   id: string;
@@ -196,15 +197,13 @@ export function PlaygroundClient({
             ? "Full CloudEvents message"
             : "Data payload"}
         </label>
-        <textarea
+        <JsonEditor
           value={payload}
-          onChange={(e) => {
-            setPayload(e.target.value);
+          onChange={(code) => {
+            setPayload(code);
             setResult(null);
           }}
           rows={18}
-          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-mono bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
-          spellCheck={false}
         />
       </div>
 
