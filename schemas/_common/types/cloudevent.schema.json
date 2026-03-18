@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:gluendo:schema:_common:types:cloudevent",
+  "title": "CloudEvent",
+  "description": "CloudEvents v1.0 envelope with Gluendo platform-mandatory attributes. See ADR-007.",
+  "type": "object",
+  "required": [
+    "specversion",
+    "id",
+    "source",
+    "type",
+    "time",
+    "datacontenttype",
+    "dataschema",
+    "traceparent"
+  ],
+  "properties": {
+    "specversion": {
+      "type": "string",
+      "const": "1.0",
+      "description": "CloudEvents specification version"
+    },
+    "id": {
+      "type": "string",
+      "description": "Unique event identifier (UUID recommended). Used for deduplication."
+    },
+    "source": {
+      "type": "string",
+      "pattern": "^urn:",
+      "description": "URN identifying the producing system. Format: urn:{org}:{domain}:{product}[:{component}]"
+    },
+    "type": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+\\.[a-z0-9-]+\\.[a-z0-9-]+\\.[a-z0-9-]+$",
+      "description": "Event type in reverse-DNS format: {org}.{domain}.{entity}.{event}"
+    },
+    "time": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp of when the event occurred (ISO 8601 / RFC 3339)"
+    },
+    "datacontenttype": {
+      "type": "string",
+      "const": "application/json",
+      "description": "MIME type of the data field. Always application/json on this platform."
+    },
+    "dataschema": {
+      "type": "string",
+      "format": "uri",
+      "description": "Resolvable URL to the JSON Schema for the data field"
+    },
+    "traceparent": {
+      "type": "string",
+      "pattern": "^00-[0-9a-f]{32}-[0-9a-f]{16}-[0-9a-f]{2}$",
+      "description": "W3C Trace Context traceparent header for distributed tracing"
+    },
+    "subject": {
+      "type": "string",
+      "description": "Optional subject of the event in context of the source (e.g., entity ID)"
+    },
+    "correlationid": {
+      "type": "string",
+      "description": "Trace a business transaction across multiple events"
+    },
+    "causationid": {
+      "type": "string",
+      "description": "Identifier of the event that caused this event"
+    },
+    "changedfields": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      },
+      "description": "JSON Path notation for fields that changed (delta/skinny events). See ADR-008."
+    },
+    "etag": {
+      "type": "string",
+      "pattern": "^W/\"[^\"]*\"$|^\"[^\"]*\"$",
+      "description": "Entity tag per RFC 7232 for optimistic concurrency (delta/skinny events)"
+    },
+    "data": {
+      "type": "object",
+      "description": "Event payload. Must conform to the schema referenced by dataschema."
+    }
+  }
+}

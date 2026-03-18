@@ -1,4 +1,8 @@
-import { getAllSchemas, getExampleForSchema } from "@/lib/schemas";
+import {
+  getAllSchemas,
+  getExampleForSchema,
+  getCloudEventSchema,
+} from "@/lib/schemas";
 import { PlaygroundClient } from "./PlaygroundClient";
 
 export const metadata = {
@@ -6,13 +10,16 @@ export const metadata = {
 };
 
 export default function PlaygroundPage() {
+  const cloudEventSchema = getCloudEventSchema();
+
   const schemas = getAllSchemas().map((s) => {
     const example = getExampleForSchema(s.domain, s.entity);
     return {
       id: s.id,
       label: `${s.domain}/${s.entity} ${s.version}`,
       raw: s.raw,
-      example: example ? JSON.stringify(example, null, 2) : null,
+      exampleData: example ? JSON.stringify(example.data, null, 2) : null,
+      exampleFull: example ? JSON.stringify(example.full, null, 2) : null,
     };
   });
 
@@ -23,11 +30,14 @@ export default function PlaygroundPage() {
           Validation Playground
         </h1>
         <p className="mt-2 text-gray-600">
-          Select a schema and validate a JSON payload against it. Example
-          payloads are loaded automatically.
+          Validate a JSON payload against a schema. Toggle between validating
+          just the data payload or a full CloudEvents message.
         </p>
       </div>
-      <PlaygroundClient schemas={schemas} />
+      <PlaygroundClient
+        schemas={schemas}
+        cloudEventSchema={cloudEventSchema}
+      />
     </div>
   );
 }

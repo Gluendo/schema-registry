@@ -17,14 +17,11 @@
 - [x] PR template with checklist
 - [x] Makefile for common operations
 - [x] CONTRIBUTING.md producer guide
-
-## Next — client engagement readiness
-
-- [ ] **CloudEvents envelope schema** — `_common/types/cloudevent.schema.json` validating the full envelope (specversion, id, source, type, time, traceparent, dataschema, data). Update playground to validate complete CloudEvents messages, not just `data` payloads.
-- [ ] **More reference domains** — add `supply-chain/purchase-order` and `crm/customer` to strengthen the demonstrator and stress-test tooling across more entity shapes.
-- [ ] **Audience projection policies** — implement OPA/Rego examples per ADR-009. Start with `internal` vs `partner` for the employee entity. Add policy viewer to the catalog.
-- [ ] **Consumer getting started guide** — documentation for consumers: how to discover a schema, fetch it, validate against it in code (Java, Python, TypeScript examples).
-- [ ] **Client template repository** — per ADR-005, a GitHub template repo that clients fork to bootstrap their own schema registry with Gluendo's starter kit pre-configured.
+- [x] CloudEvents envelope schema with full envelope validation in playground
+- [x] Reference schemas: 4 domains (HR/employee, Finance/invoice, Supply Chain/purchase-order, CRM/customer)
+- [x] Audience projection policies (OPA/Rego example for employee: internal vs partner)
+- [x] Consumer getting started guide (TypeScript, Python, Java examples)
+- [x] Client template with setup script for bootstrapping client registries
 
 ## Catalog improvements
 

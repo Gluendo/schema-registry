@@ -1,0 +1,49 @@
+{
+  "specversion": "1.0",
+  "id": "e5f6a7b8-c9d0-1234-efab-345678901234",
+  "source": "urn:gluendo:supply-chain:sap-mm",
+  "type": "gluendo.supply-chain.purchase-order.created",
+  "time": "2026-03-18T11:00:00Z",
+  "datacontenttype": "application/json",
+  "traceparent": "00-8ff92f3577b34da6a3ce929d0e0e4736-44f067aa0ba902b7-01",
+  "dataschema": "https://gluendo.github.io/schema-registry/schemas/domains/supply-chain/purchase-order/v1.0.0/purchase-order.schema.json",
+  "data": {
+    "purchaseOrderId": "PO-2026-0108",
+    "orderNumber": "PO-0108",
+    "status": "approved",
+    "orderDate": "2026-03-18",
+    "expectedDeliveryDate": "2026-04-01",
+    "supplierId": "SUP-001",
+    "supplierName": "Acme Corp",
+    "requesterId": "EMP-00042",
+    "totalAmount": {
+      "amount": 12500.00,
+      "currency": "EUR"
+    },
+    "lineItems": [
+      {
+        "lineNumber": 1,
+        "description": "Server rack 42U",
+        "sku": "RACK-42U-BLK",
+        "quantity": 2,
+        "unitPrice": {
+          "amount": 5000.00,
+          "currency": "EUR"
+        },
+        "receivedQuantity": 0
+      },
+      {
+        "lineNumber": 2,
+        "description": "CAT6 patch cables (3m)",
+        "sku": "CABLE-CAT6-3M",
+        "quantity": 50,
+        "unitPrice": {
+          "amount": 50.00,
+          "currency": "EUR"
+        },
+        "receivedQuantity": 0
+      }
+    ],
+    "notes": "Deliver to datacenter loading dock, building B"
+  }
+}

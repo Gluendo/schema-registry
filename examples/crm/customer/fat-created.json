@@ -1,0 +1,21 @@
+{
+  "specversion": "1.0",
+  "id": "f6a7b8c9-d0e1-2345-fabc-456789012345",
+  "source": "urn:gluendo:crm:salesforce",
+  "type": "gluendo.crm.customer.created",
+  "time": "2026-03-18T08:30:00Z",
+  "datacontenttype": "application/json",
+  "traceparent": "00-9af92f3577b34da6a3ce929d0e0e4736-55f067aa0ba902b7-01",
+  "dataschema": "https://gluendo.github.io/schema-registry/schemas/domains/crm/customer/v1.0.0/customer.schema.json",
+  "data": {
+    "customerId": "CUS-042",
+    "companyName": "Globex Industries SA",
+    "tradingName": "Globex",
+    "status": "active",
+    "industry": "Manufacturing",
+    "website": "https://globex.example.com",
+    "taxId": "FR12345678901",
+    "accountManagerId": "EMP-00099",
+    "createdAt": "2026-03-18T08:30:00Z"
+  }
+}

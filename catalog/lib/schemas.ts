@@ -228,23 +228,37 @@ const EXAMPLES_DIR = path.resolve(process.cwd(), "../examples");
 // Load example payloads
 // ---------------------------------------------------------------------------
 
-export function getExampleForSchema(domain: string, entity: string): Record<string, unknown> | null {
+export function getExampleForSchema(
+  domain: string,
+  entity: string
+): { data: Record<string, unknown>; full: Record<string, unknown> } | null {
   const examplesEntityDir = path.join(EXAMPLES_DIR, domain, entity);
   if (!isDir(examplesEntityDir)) return null;
 
-  // Return the first example found (prefer fat)
   try {
-    const files = fs.readdirSync(examplesEntityDir)
+    const files = fs
+      .readdirSync(examplesEntityDir)
       .filter((f) => f.endsWith(".json"))
       .sort((a, b) => {
-        // Prefer fat > delta > skinny
-        const order = (n: string) => n.includes("fat") ? 0 : n.includes("delta") ? 1 : 2;
+        const order = (n: string) =>
+          n.includes("fat") ? 0 : n.includes("delta") ? 1 : 2;
         return order(a) - order(b);
       });
 
     if (files.length === 0) return null;
-    const example = JSON.parse(fs.readFileSync(path.join(examplesEntityDir, files[0]), "utf-8"));
-    return example.data ?? null;
+    const full = JSON.parse(
+      fs.readFileSync(path.join(examplesEntityDir, files[0]), "utf-8")
+    );
+    return { data: full.data ?? {}, full };
+  } catch {
+    return null;
+  }
+}
+
+export function getCloudEventSchema(): Record<string, unknown> | null {
+  const p = path.join(SOURCE_DIR, "_common", "types", "cloudevent.schema.json");
+  try {
+    return JSON.parse(fs.readFileSync(p, "utf-8"));
   } catch {
     return null;
   }

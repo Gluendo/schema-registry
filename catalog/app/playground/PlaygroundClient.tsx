@@ -8,7 +8,8 @@ interface SchemaOption {
   id: string;
   label: string;
   raw: Record<string, unknown>;
-  example: string | null;
+  exampleData: string | null;
+  exampleFull: string | null;
 }
 
 interface ValidationResult {
@@ -22,20 +23,42 @@ const FALLBACK_PAYLOAD = `{
 
 export function PlaygroundClient({
   schemas,
+  cloudEventSchema,
 }: {
   schemas: SchemaOption[];
+  cloudEventSchema: Record<string, unknown> | null;
 }) {
   const initial = schemas[0];
   const [selectedSchema, setSelectedSchema] = useState(initial?.id ?? "");
-  const [payload, setPayload] = useState(initial?.example ?? FALLBACK_PAYLOAD);
+  const [mode, setMode] = useState<"data" | "cloudevent">("data");
+  const [payload, setPayload] = useState(
+    initial?.exampleData ?? FALLBACK_PAYLOAD
+  );
   const [result, setResult] = useState<ValidationResult | null>(null);
 
   const handleSchemaChange = (id: string) => {
     setSelectedSchema(id);
     setResult(null);
     const schema = schemas.find((s) => s.id === id);
-    if (schema?.example) {
-      setPayload(schema.example);
+    if (schema) {
+      setPayload(
+        mode === "cloudevent"
+          ? schema.exampleFull ?? FALLBACK_PAYLOAD
+          : schema.exampleData ?? FALLBACK_PAYLOAD
+      );
+    }
+  };
+
+  const handleModeChange = (newMode: "data" | "cloudevent") => {
+    setMode(newMode);
+    setResult(null);
+    const schema = schemas.find((s) => s.id === selectedSchema);
+    if (schema) {
+      setPayload(
+        newMode === "cloudevent"
+          ? schema.exampleFull ?? FALLBACK_PAYLOAD
+          : schema.exampleData ?? FALLBACK_PAYLOAD
+      );
     }
   };
 
@@ -52,7 +75,9 @@ export function PlaygroundClient({
     } catch (e) {
       setResult({
         valid: false,
-        errors: [`Invalid JSON: ${e instanceof Error ? e.message : String(e)}`],
+        errors: [
+          `Invalid JSON: ${e instanceof Error ? e.message : String(e)}`,
+        ],
       });
       return;
     }
@@ -61,52 +86,115 @@ export function PlaygroundClient({
       const ajv = new Ajv({ allErrors: true, strict: false });
       addFormats(ajv);
 
-      const schemaCopy = { ...schema.raw };
-      delete schemaCopy["$schema"];
-      delete schemaCopy["$id"];
+      const errors: string[] = [];
 
-      const valid = ajv.validate(schemaCopy, data);
-      if (valid) {
-        setResult({ valid: true, errors: [] });
+      if (mode === "cloudevent" && cloudEventSchema) {
+        // Validate envelope
+        const envelopeCopy = { ...cloudEventSchema };
+        delete envelopeCopy["$schema"];
+        delete envelopeCopy["$id"];
+        const envelopeValid = ajv.validate(envelopeCopy, data);
+        if (!envelopeValid) {
+          for (const e of ajv.errors ?? []) {
+            errors.push(`envelope${e.instancePath || "/"}: ${e.message}`);
+          }
+        }
+
+        // Also validate the data field against the selected schema
+        const msg = data as Record<string, unknown>;
+        if (msg.data && typeof msg.data === "object") {
+          const ajv2 = new Ajv({ allErrors: true, strict: false });
+          addFormats(ajv2);
+          const schemaCopy = { ...schema.raw };
+          delete schemaCopy["$schema"];
+          delete schemaCopy["$id"];
+          const dataValid = ajv2.validate(schemaCopy, msg.data);
+          if (!dataValid) {
+            for (const e of ajv2.errors ?? []) {
+              errors.push(`data${e.instancePath || "/"}: ${e.message}`);
+            }
+          }
+        }
       } else {
-        setResult({
-          valid: false,
-          errors: (ajv.errors ?? []).map((e) => {
-            const path = e.instancePath || "/";
-            return `${path}: ${e.message}`;
-          }),
-        });
+        // Validate data only
+        const schemaCopy = { ...schema.raw };
+        delete schemaCopy["$schema"];
+        delete schemaCopy["$id"];
+        const valid = ajv.validate(schemaCopy, data);
+        if (!valid) {
+          for (const e of ajv.errors ?? []) {
+            errors.push(`${e.instancePath || "/"}: ${e.message}`);
+          }
+        }
       }
+
+      setResult({
+        valid: errors.length === 0,
+        errors,
+      });
     } catch (e) {
       setResult({
         valid: false,
-        errors: [`Validation error: ${e instanceof Error ? e.message : String(e)}`],
+        errors: [
+          `Validation error: ${e instanceof Error ? e.message : String(e)}`,
+        ],
       });
     }
-  }, [selectedSchema, payload, schemas]);
+  }, [selectedSchema, payload, schemas, mode, cloudEventSchema]);
 
   return (
     <div className="space-y-4">
-      <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
-          Schema
-        </label>
-        <select
-          value={selectedSchema}
-          onChange={(e) => handleSchemaChange(e.target.value)}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
-        >
-          {schemas.map((s) => (
-            <option key={s.id} value={s.id}>
-              {s.label}
-            </option>
-          ))}
-        </select>
+      <div className="flex gap-4">
+        <div className="flex-1">
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Schema
+          </label>
+          <select
+            value={selectedSchema}
+            onChange={(e) => handleSchemaChange(e.target.value)}
+            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+          >
+            {schemas.map((s) => (
+              <option key={s.id} value={s.id}>
+                {s.label}
+              </option>
+            ))}
+          </select>
+        </div>
+        <div>
+          <label className="block text-sm font-medium text-gray-700 mb-1">
+            Validate
+          </label>
+          <div className="flex rounded-md border border-gray-200 text-xs">
+            <button
+              onClick={() => handleModeChange("data")}
+              className={`px-3 py-2 rounded-l-md ${
+                mode === "data"
+                  ? "bg-gray-900 text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              Data only
+            </button>
+            <button
+              onClick={() => handleModeChange("cloudevent")}
+              className={`px-3 py-2 rounded-r-md border-l border-gray-200 ${
+                mode === "cloudevent"
+                  ? "bg-gray-900 text-white"
+                  : "bg-white text-gray-600 hover:bg-gray-50"
+              }`}
+            >
+              CloudEvent
+            </button>
+          </div>
+        </div>
       </div>
 
       <div>
         <label className="block text-sm font-medium text-gray-700 mb-1">
-          JSON Payload
+          {mode === "cloudevent"
+            ? "Full CloudEvents message"
+            : "Data payload"}
         </label>
         <textarea
           value={payload}
@@ -114,7 +202,7 @@ export function PlaygroundClient({
             setPayload(e.target.value);
             setResult(null);
           }}
-          rows={15}
+          rows={18}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
           spellCheck={false}
         />
@@ -135,15 +223,17 @@ export function PlaygroundClient({
               : "bg-red-50 border-red-200"
           }`}
         >
-          <div className="flex items-center gap-2 mb-1">
-            <span
-              className={`text-sm font-semibold ${
-                result.valid ? "text-green-800" : "text-red-800"
-              }`}
-            >
-              {result.valid ? "Valid" : "Invalid"}
-            </span>
-          </div>
+          <span
+            className={`text-sm font-semibold ${
+              result.valid ? "text-green-800" : "text-red-800"
+            }`}
+          >
+            {result.valid
+              ? mode === "cloudevent"
+                ? "Valid — envelope and data both pass"
+                : "Valid"
+              : "Invalid"}
+          </span>
           {result.errors.length > 0 && (
             <ul className="mt-2 space-y-1">
               {result.errors.map((err, i) => (
