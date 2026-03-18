@@ -36,6 +36,9 @@ yarn-error.log*
 # vercel
 .vercel
 
+# generated schemas (copied from dist/ at build time)
+/public/schemas
+
 # typescript
 *.tsbuildinfo
 next-env.d.ts

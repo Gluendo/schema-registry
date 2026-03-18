@@ -40,7 +40,7 @@ export default async function VersionPage({
   if (!schema) notFound();
 
   const versions = getVersions(domain, entity);
-  const apiUrl = `/api/schemas/domains/${domain}/${entity}/${version}/${entity}.schema.json`;
+  const schemaUrl = `/schema-registry/schemas/domains/${domain}/${entity}/${version}/${entity}.schema.json`;
 
   return (
     <div>
@@ -70,7 +70,7 @@ export default async function VersionPage({
           ))}
         </div>
         <a
-          href={apiUrl}
+          href={schemaUrl}
           target="_blank"
           rel="noopener noreferrer"
           className="text-xs text-gray-500 hover:text-blue-600 font-mono"

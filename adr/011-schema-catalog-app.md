@@ -88,9 +88,11 @@ The `/api/schemas/` prefix separates machine-readable endpoints from human-reada
 
 ### Deployment
 
-- **Platform**: Vercel (free tier sufficient for a demonstrator)
-- **Custom domain**: `schemas.gluendo.io` (optional, maps to the Vercel deployment)
-- **Build trigger**: on push to `main`, Vercel builds the Next.js app. The build step runs `schema-tools.py bundle` to produce `dist/`, which the app reads at build time for static generation.
+- **Platform**: GitHub Pages (free, works with public repos, no additional account needed)
+- **URL**: `https://gluendo.github.io/schema-registry/` (or custom domain via GitHub Pages settings)
+- **Build trigger**: GitHub Actions workflow on push to `main` (touching `catalog/`, `schemas/`, or `tools/`)
+- **Static export**: Next.js builds with `output: 'export'`, producing a fully static site in `out/`. No server-side runtime.
+- **Schema serving**: bundled schemas are copied into `public/schemas/` at build time, served as static JSON files alongside the HTML pages.
 - **No runtime dependency on the Git repo**: the catalog is fully self-contained after build.
 
 ### Search strategy
@@ -107,16 +109,16 @@ As the schema library grows, this can be upgraded to a client-side search librar
 - **Discoverability**: producers and consumers can browse, search, and understand schemas without cloning the repo.
 - **Demonstrator value**: a polished catalog makes the schema registry tangible for prospective Gluendo clients.
 - **Incremental**: starts simple (browse + serve), grows with the product (search, comparison, validation playground).
-- **No infrastructure burden**: Vercel handles deployment, scaling, and SSL. No servers to operate.
+- **No infrastructure burden**: GitHub Pages handles deployment and SSL. No servers to operate, no additional accounts needed.
 
 ### Negative
 
 - **Another artifact to maintain**: the catalog app is code that needs updates as features are added.
 - **Build-time coupling**: the catalog depends on the bundled `dist/` output. Changes to the bundling process affect the catalog.
-- **Vercel dependency**: the catalog is tied to Vercel for deployment. Migrating to another platform is possible but requires effort.
+- **GitHub Pages limitation**: `Content-Type` for served schemas is `application/json` (not `application/schema+json`). This is acceptable for most consumers but not fully spec-compliant. If strict content-type control is needed, a dedicated serving layer can be added later.
 
 ### Mitigations
 
 - Keep the catalog app thin — it's a view layer over the schema files, not a platform.
-- The catalog reads standard JSON Schema files from `dist/`. If Vercel is replaced, the same app can run on any Node.js host.
-- Automated deployment via Vercel's GitHub integration minimizes maintenance overhead.
+- The catalog reads standard JSON Schema files from `dist/`. The static export can be hosted anywhere (GitHub Pages, S3, Netlify, Cloudflare Pages).
+- Automated deployment via GitHub Actions minimizes maintenance overhead.

@@ -1,16 +1,22 @@
-name: Catalog Build
+name: Deploy Catalog to GitHub Pages
 
 on:
   workflow_dispatch:
-  pull_request:
-    paths:
-      - 'catalog/**'
-      - 'schemas/**'
   push:
     branches: [main]
     paths:
       - 'catalog/**'
       - 'schemas/**'
+      - 'tools/**'
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+concurrency:
+  group: pages
+  cancel-in-progress: true
 
 jobs:
   build:
@@ -23,9 +29,6 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Bundle schemas
-        run: python3 tools/schema-tools.py bundle schemas dist
-
       - name: Set up Node.js
         uses: actions/setup-node@v4
         with:
@@ -36,5 +39,21 @@ jobs:
       - name: Install dependencies
         run: cd catalog && npm ci
 
-      - name: Build catalog
+      - name: Build (bundles schemas + copies to public + static export)
         run: cd catalog && npm run build
+
+      - name: Upload Pages artifact
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: catalog/out
+
+  deploy:
+    needs: build
+    runs-on: ubuntu-latest
+    environment:
+      name: "github-pages"
+      url: "${{ steps.deployment.outputs.page_url }}"
+    steps:
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4
