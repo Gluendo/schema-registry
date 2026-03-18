@@ -15,20 +15,20 @@ build:
 
 # Produce a valid employee.created event
 produce:
-	docker compose --profile produce run --rm producer
+	docker compose --profile produce run --rm --build producer
 
 # Produce an invalid event (triggers consumer DLQ)
 produce-invalid:
-	docker compose --profile produce-invalid run --rm producer-invalid
+	docker compose --profile produce-invalid run --rm --build producer-invalid
 
-# Start both consumers
+# Start both consumers (rebuild if code changed)
 consumers:
-	docker compose --profile consumers up consumer-ts consumer-java
+	docker compose --profile consumers up --build consumer-ts consumer-java
 
 # Start TypeScript consumer only
 consume-ts:
-	docker compose --profile consumers up consumer-ts
+	docker compose --profile consumers up --build consumer-ts
 
 # Start Java consumer only
 consume-java:
-	docker compose --profile consumers up consumer-java
+	docker compose --profile consumers up --build consumer-java

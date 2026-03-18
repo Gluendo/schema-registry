@@ -13,12 +13,23 @@ Usage:
 import asyncio
 import json
 import os
+import random
 import sys
 import uuid
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 import nats
 import requests
+
+FIRST_NAMES = ["Alice", "Bob", "Charlie", "Diana", "Eve", "Frank", "Grace", "Hugo", "Iris", "Jack"]
+LAST_NAMES = ["Martin", "Dupont", "Smith", "Garcia", "Mueller", "Tanaka", "Singh", "Chen", "Rossi", "Silva"]
+DEPARTMENTS = ["Engineering", "Finance", "Marketing", "Sales", "HR", "Legal", "Operations", "Product", "Design", "Data"]
+POSITIONS = [
+    "Staff Engineer", "Senior Developer", "Product Manager", "Data Analyst",
+    "UX Designer", "DevOps Engineer", "QA Lead", "Scrum Master",
+    "Solutions Architect", "Technical Writer",
+]
+STATUSES = ["active", "inactive"]
 from jsonschema import validate, ValidationError
 
 # Schema registry catalog URL (bundled, self-contained schema)
@@ -41,7 +52,18 @@ def fetch_schema(url: str) -> dict:
 
 
 def build_valid_event() -> dict:
-    """Build a valid CloudEvents employee.created message."""
+    """Build a valid CloudEvents employee.created message with randomized data."""
+    first = random.choice(FIRST_NAMES)
+    last = random.choice(LAST_NAMES)
+    dept = random.choice(DEPARTMENTS)
+    pos = random.choice(POSITIONS)
+    status = random.choice(STATUSES)
+    hire_offset = random.randint(1, 365 * 5)
+    hire_date = (datetime.now(timezone.utc) - timedelta(days=hire_offset)).strftime("%Y-%m-%d")
+    email = f"{first.lower()}.{last.lower()}@example.com"
+    emp_id = f"EMP-{uuid.uuid4().hex[:5].upper()}"
+    manager_id = f"EMP-{uuid.uuid4().hex[:5].upper()}"
+
     return {
         "specversion": "1.0",
         "id": str(uuid.uuid4()),
@@ -52,16 +74,16 @@ def build_valid_event() -> dict:
         "traceparent": f"00-{uuid.uuid4().hex}-{uuid.uuid4().hex[:16]}-01",
         "dataschema": SCHEMA_URL,
         "data": {
-            "employeeId": f"EMP-{uuid.uuid4().hex[:5].upper()}",
-            "firstName": "Alice",
-            "lastName": "Martin",
-            "email": "alice.martin@example.com",
-            "department": "Engineering",
-            "position": "Staff Engineer",
-            "hireDate": "2026-03-01",
+            "employeeId": emp_id,
+            "firstName": first,
+            "lastName": last,
+            "email": email,
+            "department": dept,
+            "position": pos,
+            "hireDate": hire_date,
             "terminationDate": None,
-            "status": "active",
-            "managerId": "EMP-00042",
+            "status": status,
+            "managerId": manager_id,
         },
     }
 
