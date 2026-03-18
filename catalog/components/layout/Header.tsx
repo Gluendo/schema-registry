@@ -17,6 +17,9 @@ export function Header() {
           <Link href="/search" className="text-gray-600 hover:text-gray-900">
             Search
           </Link>
+          <Link href="/dependencies" className="text-gray-600 hover:text-gray-900">
+            Dependencies
+          </Link>
         </nav>
       </div>
     </header>

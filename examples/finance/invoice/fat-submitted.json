@@ -1,0 +1,23 @@
+{
+  "specversion": "1.0",
+  "id": "d4e5f6a7-b8c9-0123-defa-234567890123",
+  "source": "urn:gluendo:finance:sap",
+  "type": "gluendo.finance.invoice.submitted",
+  "time": "2026-03-18T09:00:00Z",
+  "datacontenttype": "application/json",
+  "traceparent": "00-7ef92f3577b34da6a3ce929d0e0e4736-33f067aa0ba902b7-01",
+  "dataschema": "https://gluendo.github.io/schema-registry/schemas/domains/finance/invoice/v1.0.0/invoice.schema.json",
+  "data": {
+    "invoiceId": "INV-2026-0042",
+    "invoiceNumber": "F-2026-0042",
+    "issueDate": "2026-03-18",
+    "dueDate": "2026-04-17",
+    "status": "submitted",
+    "supplierId": "SUP-001",
+    "supplierName": "Acme Corp",
+    "customerId": "CUS-042",
+    "customerName": "Globex Industries",
+    "paymentTerms": "Net 30",
+    "purchaseOrderReference": "PO-2026-108"
+  }
+}

@@ -216,3 +216,75 @@ export function getRawSchema(
     return null;
   }
 }
+
+// ---------------------------------------------------------------------------
+// Dependency graph — which domain schemas use which common types
+// ---------------------------------------------------------------------------
+
+const SOURCE_DIR = path.resolve(process.cwd(), "../schemas");
+
+function extractRefs(obj: unknown): string[] {
+  const refs: string[] = [];
+  if (typeof obj === "object" && obj !== null) {
+    if (Array.isArray(obj)) {
+      for (const item of obj) refs.push(...extractRefs(item));
+    } else {
+      const record = obj as Record<string, unknown>;
+      for (const [k, v] of Object.entries(record)) {
+        if (k === "$ref" && typeof v === "string" && v.includes("_common/")) {
+          // Extract the common type name from the path
+          const match = v.match(/_common\/(types|enums)\/([^/]+)\.schema\.json/);
+          if (match) refs.push(`${match[1]}/${match[2]}`);
+        } else {
+          refs.push(...extractRefs(v));
+        }
+      }
+    }
+  }
+  return refs;
+}
+
+export interface DependencyEntry {
+  commonType: string;
+  category: string;
+  usedBy: { domain: string; entity: string; version: string; url: string }[];
+}
+
+export function getDependencyGraph(): DependencyEntry[] {
+  const graph: Record<string, DependencyEntry["usedBy"]> = {};
+  const sourceDomains = path.join(SOURCE_DIR, "domains");
+
+  if (!isDir(sourceDomains)) return [];
+
+  for (const domain of listDirs(sourceDomains)) {
+    for (const entity of listDirs(path.join(sourceDomains, domain))) {
+      for (const version of listDirs(path.join(sourceDomains, domain, entity))) {
+        const schemaPath = path.join(
+          sourceDomains, domain, entity, version, `${entity}.schema.json`
+        );
+        try {
+          const raw = JSON.parse(fs.readFileSync(schemaPath, "utf-8"));
+          const refs = [...new Set(extractRefs(raw))];
+          for (const ref of refs) {
+            if (!graph[ref]) graph[ref] = [];
+            graph[ref].push({
+              domain,
+              entity,
+              version,
+              url: `/domains/${domain}/${entity}/${version}`,
+            });
+          }
+        } catch {
+          // skip
+        }
+      }
+    }
+  }
+
+  return Object.entries(graph)
+    .map(([key, usedBy]) => {
+      const [category, name] = key.split("/");
+      return { commonType: name, category, usedBy };
+    })
+    .sort((a, b) => a.commonType.localeCompare(b.commonType));
+}

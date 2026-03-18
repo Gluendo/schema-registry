@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Schema registry validation, formatting, and bundling tools.
+"""Schema registry validation, formatting, bundling, and compatibility tools.
 
 Usage:
     python3 tools/schema-tools.py validate <dir>       # Validate JSON syntax
@@ -7,7 +7,9 @@ Usage:
     python3 tools/schema-tools.py format --check <dir>  # Check formatting only
     python3 tools/schema-tools.py refs <dir>            # Validate $ref targets
     python3 tools/schema-tools.py bundle <dir> <out>    # Bundle schemas (inline $ref)
-    python3 tools/schema-tools.py all <dir>             # Run validate + format --check + refs
+    python3 tools/schema-tools.py compat <dir>          # Check backward compatibility between versions
+    python3 tools/schema-tools.py examples <dir>        # Validate example payloads against schemas
+    python3 tools/schema-tools.py all <dir>             # Run validate + format --check + refs + compat
 """
 
 import json
@@ -208,6 +210,264 @@ def bundle_schemas(source_dir: str, output_dir: str) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Compatibility checking — detect breaking changes between versions
+# ---------------------------------------------------------------------------
+
+def parse_version(v: str) -> tuple[int, int, int]:
+    """Parse 'v1.2.3' into (1, 2, 3)."""
+    parts = v.lstrip("v").split(".")
+    return (int(parts[0]), int(parts[1]), int(parts[2]))
+
+
+def collect_properties(schema: dict, prefix: str = "") -> dict[str, dict]:
+    """Flatten schema properties into a dict keyed by dotted path."""
+    result = {}
+    props = schema.get("properties", {})
+    for name, prop in props.items():
+        path = f"{prefix}.{name}" if prefix else name
+        result[path] = prop
+        # Recurse into nested objects
+        if "properties" in prop:
+            result.update(collect_properties(prop, path))
+        # Recurse into array items
+        if prop.get("type") == "array" and isinstance(prop.get("items"), dict):
+            items = prop["items"]
+            if "properties" in items:
+                result.update(collect_properties(items, f"{path}[]"))
+    return result
+
+
+def check_compat_pair(
+    old_schema: dict, new_schema: dict, old_ver: str, new_ver: str, path_label: str
+) -> list[str]:
+    """Compare two schema versions and return a list of breaking changes."""
+    breaking: list[str] = []
+
+    old_props = collect_properties(old_schema)
+    new_props = collect_properties(new_schema)
+    old_required = set(old_schema.get("required", []))
+    new_required = set(new_schema.get("required", []))
+
+    # Removed fields
+    for field in old_props:
+        if field not in new_props:
+            breaking.append(f"  REMOVED: {field} (was in {old_ver}, missing in {new_ver})")
+
+    # Type changes
+    for field in old_props:
+        if field in new_props:
+            old_type = old_props[field].get("type")
+            new_type = new_props[field].get("type")
+            if old_type != new_type:
+                breaking.append(
+                    f"  TYPE CHANGED: {field} ({old_type} -> {new_type})"
+                )
+            # Enum values removed
+            old_enum = set()
+            new_enum = set()
+            if old_props[field].get("oneOf"):
+                old_enum = {
+                    str(v.get("const", ""))
+                    for v in old_props[field]["oneOf"]
+                    if "const" in v
+                }
+            if new_props[field].get("oneOf"):
+                new_enum = {
+                    str(v.get("const", ""))
+                    for v in new_props[field]["oneOf"]
+                    if "const" in v
+                }
+            if old_enum and new_enum:
+                removed_vals = old_enum - new_enum
+                if removed_vals:
+                    breaking.append(
+                        f"  ENUM VALUE REMOVED: {field} (removed: {', '.join(sorted(removed_vals))})"
+                    )
+
+    # New required fields (that didn't exist or weren't required before)
+    added_required = new_required - old_required
+    for field in added_required:
+        if field not in old_props:
+            breaking.append(
+                f"  NEW REQUIRED FIELD: {field} (added as required in {new_ver})"
+            )
+        else:
+            breaking.append(
+                f"  MADE REQUIRED: {field} (was optional in {old_ver}, required in {new_ver})"
+            )
+
+    return breaking
+
+
+def check_compatibility(schema_dir: str) -> int:
+    """Check backward compatibility between consecutive versions. Returns error count."""
+    domains_dir = Path(schema_dir) / "domains"
+    if not domains_dir.is_dir():
+        print("  No domains/ directory found")
+        return 0
+
+    errors = 0
+
+    for domain_dir in sorted(domains_dir.iterdir()):
+        if not domain_dir.is_dir():
+            continue
+        for entity_dir in sorted(domain_dir.iterdir()):
+            if not entity_dir.is_dir():
+                continue
+
+            # Collect and sort versions
+            versions = sorted(
+                [d.name for d in entity_dir.iterdir() if d.is_dir() and d.name.startswith("v")],
+                key=parse_version,
+            )
+
+            if len(versions) < 2:
+                continue
+
+            entity_name = entity_dir.name
+            domain_name = domain_dir.name
+
+            # Compare consecutive versions
+            for i in range(1, len(versions)):
+                old_ver = versions[i - 1]
+                new_ver = versions[i]
+
+                old_major = parse_version(old_ver)[0]
+                new_major = parse_version(new_ver)[0]
+
+                # Major version bump — breaking changes are expected
+                if new_major > old_major:
+                    continue
+
+                old_path = entity_dir / old_ver / f"{entity_name}.schema.json"
+                new_path = entity_dir / new_ver / f"{entity_name}.schema.json"
+
+                if not old_path.exists() or not new_path.exists():
+                    continue
+
+                try:
+                    old_schema = json.loads(old_path.read_text(encoding="utf-8"))
+                    new_schema = json.loads(new_path.read_text(encoding="utf-8"))
+                except (json.JSONDecodeError, OSError):
+                    continue
+
+                label = f"{domain_name}/{entity_name}"
+                breaking = check_compat_pair(old_schema, new_schema, old_ver, new_ver, label)
+
+                if breaking:
+                    print(f"  FAIL: {label} ({old_ver} -> {new_ver}) has breaking changes in a minor/patch bump:")
+                    for b in breaking:
+                        print(b)
+                    errors += len(breaking)
+
+    return errors
+
+
+# ---------------------------------------------------------------------------
+# Example payload validation
+# ---------------------------------------------------------------------------
+
+def validate_examples(schema_dir: str) -> int:
+    """Validate example payloads against their referenced schemas. Returns error count."""
+    examples_dir = Path(schema_dir).parent / "examples"
+    if not examples_dir.is_dir():
+        print("  No examples/ directory found")
+        return 0
+
+    errors = 0
+    domains_dir = Path(schema_dir) / "domains"
+
+    for example_file in sorted(examples_dir.rglob("*.json")):
+        try:
+            example = json.loads(example_file.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"  FAIL: {example_file} — {e}")
+            errors += 1
+            continue
+
+        # Extract dataschema from CloudEvents envelope
+        dataschema = example.get("dataschema", "")
+        data = example.get("data")
+
+        if not dataschema:
+            print(f"  SKIP: {example_file} — no dataschema field")
+            continue
+
+        if data is None:
+            print(f"  SKIP: {example_file} — no data field")
+            continue
+
+        # Resolve dataschema URL to a local file
+        # Expected format: https://gluendo.github.io/schema-registry/schemas/domains/{domain}/{entity}/{version}/{entity}.schema.json
+        # We extract the path after /schemas/ and look it up in the schemas dir
+        schema_path = None
+        if "/schemas/domains/" in dataschema:
+            rel = dataschema.split("/schemas/domains/")[1]
+            schema_path = domains_dir / rel
+        elif "/schemas/_common/" in dataschema:
+            rel = dataschema.split("/schemas/")[1]
+            schema_path = Path(schema_dir) / rel
+
+        if not schema_path or not schema_path.exists():
+            print(f"  FAIL: {example_file} — dataschema not found locally: {dataschema}")
+            errors += 1
+            continue
+
+        try:
+            schema = json.loads(schema_path.read_text(encoding="utf-8"))
+        except (json.JSONDecodeError, OSError) as e:
+            print(f"  FAIL: {example_file} — cannot read schema: {e}")
+            errors += 1
+            continue
+
+        # Basic structural validation (check required fields are present)
+        required_fields = schema.get("required", [])
+        schema_props = schema.get("properties", {})
+
+        for field in required_fields:
+            if field not in data:
+                print(f"  FAIL: {example_file} — missing required field: {field}")
+                errors += 1
+
+        # Check data field types match schema
+        for field, value in data.items():
+            if field not in schema_props:
+                continue  # extra fields are allowed
+            expected = schema_props[field]
+            expected_type = expected.get("type")
+            if not expected_type:
+                continue  # complex type (oneOf, $ref, etc.)
+
+            actual_type = type(value).__name__
+            type_map = {
+                "str": "string",
+                "int": "number",
+                "float": "number",
+                "bool": "boolean",
+                "list": "array",
+                "dict": "object",
+                "NoneType": "null",
+            }
+            actual_json_type = type_map.get(actual_type, actual_type)
+
+            if isinstance(expected_type, list):
+                if actual_json_type not in expected_type:
+                    print(f"  FAIL: {example_file} — field '{field}' is {actual_json_type}, expected {expected_type}")
+                    errors += 1
+            elif isinstance(expected_type, str):
+                if actual_json_type != expected_type:
+                    # number also accepts integer
+                    if not (expected_type == "number" and actual_json_type in ("number", "integer")):
+                        if not (expected_type == "integer" and isinstance(value, int)):
+                            print(f"  FAIL: {example_file} — field '{field}' is {actual_json_type}, expected {expected_type}")
+                            errors += 1
+
+        print(f"  OK: {example_file}")
+
+    return errors
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -272,6 +532,22 @@ def main():
             sys.exit(1)
         print("==> All $ref targets resolve")
 
+    elif command == "compat":
+        print("==> Checking backward compatibility between versions")
+        errors = check_compatibility(dir_arg)
+        if errors:
+            print(f"==> {errors} breaking change(s) found in minor/patch bumps")
+            sys.exit(1)
+        print("==> All version transitions are backward-compatible")
+
+    elif command == "examples":
+        print("==> Validating example payloads")
+        errors = validate_examples(dir_arg)
+        if errors:
+            print(f"==> {errors} example validation error(s)")
+            sys.exit(1)
+        print("==> All examples are valid")
+
     elif command == "all":
         print("==> Validating JSON syntax")
         errors = validate_json(schemas)
@@ -292,7 +568,14 @@ def main():
         if errors:
             print(f"==> {errors} broken $ref(s) found")
             sys.exit(1)
-        print("==> All $ref targets resolve")
+        print("==> All $ref targets resolve\n")
+
+        print("==> Checking backward compatibility between versions")
+        errors = check_compatibility(dir_arg)
+        if errors:
+            print(f"==> {errors} breaking change(s) found in minor/patch bumps")
+            sys.exit(1)
+        print("==> All version transitions are backward-compatible")
 
     else:
         print(f"Unknown command: {command}")

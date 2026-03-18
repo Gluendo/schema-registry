@@ -1,0 +1,22 @@
+{
+  "specversion": "1.0",
+  "id": "a1b2c3d4-e5f6-7890-abcd-ef1234567890",
+  "source": "urn:gluendo:hr:workday",
+  "type": "gluendo.hr.employee.created",
+  "time": "2026-03-18T10:30:00Z",
+  "datacontenttype": "application/json",
+  "traceparent": "00-4bf92f3577b34da6a3ce929d0e0e4736-00f067aa0ba902b7-01",
+  "dataschema": "https://gluendo.github.io/schema-registry/schemas/domains/hr/employee/v1.0.0/employee.schema.json",
+  "data": {
+    "employeeId": "EMP-12345",
+    "firstName": "Alice",
+    "lastName": "Martin",
+    "email": "alice.martin@example.com",
+    "department": "Engineering",
+    "position": "Staff Engineer",
+    "hireDate": "2026-03-01",
+    "terminationDate": null,
+    "status": "active",
+    "managerId": "EMP-00042"
+  }
+}

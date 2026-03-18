@@ -1,4 +1,4 @@
-.PHONY: validate format lint bundle all dev clean
+.PHONY: validate format lint bundle compat examples all dev build clean
 
 # Schema validation and formatting
 validate:
@@ -15,8 +15,16 @@ bundle:
 lint: bundle
 	./tools/lint.sh dist
 
+# Check backward compatibility between versions
+compat:
+	python3 tools/schema-tools.py compat schemas
+
+# Validate example CloudEvents payloads
+examples:
+	python3 tools/schema-tools.py examples schemas
+
 # Run all checks
-all: validate lint
+all: validate examples lint
 
 # Run catalog dev server
 dev: bundle

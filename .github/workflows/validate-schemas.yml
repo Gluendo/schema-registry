@@ -5,6 +5,7 @@ on:
   pull_request:
     paths:
       - 'schemas/**'
+      - 'examples/**'
       - 'ruleset.yaml'
       - 'tools/**'
       - 'templates/**'
@@ -13,6 +14,7 @@ on:
     branches: [main]
     paths:
       - 'schemas/**'
+      - 'examples/**'
       - 'ruleset.yaml'
       - 'tools/**'
       - 'templates/**'
@@ -29,8 +31,11 @@ jobs:
         with:
           python-version: '3.12'
 
-      - name: Validate JSON, formatting, and $ref targets
+      - name: Validate JSON, formatting, $ref targets, and compatibility
         run: python3 tools/schema-tools.py all
+
+      - name: Validate example payloads
+        run: python3 tools/schema-tools.py examples schemas
 
       - name: Bundle schemas (inline $ref)
         run: python3 tools/schema-tools.py bundle schemas dist
