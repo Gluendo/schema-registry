@@ -2,6 +2,7 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { ThemeToggle } from "./ThemeToggle";
 
 const navItems = [
   { href: "/", label: "Browse" },
@@ -20,13 +21,13 @@ export function Header() {
   };
 
   return (
-    <header className="sticky top-0 z-10 bg-white border-b border-gray-200">
+    <header className="sticky top-0 z-10 bg-white dark:bg-gray-900 border-b border-gray-200 dark:border-gray-800">
       <div className="max-w-6xl mx-auto px-4 h-14 flex items-center justify-between">
         <Link href="/" className="flex items-center gap-2">
-          <span className="text-lg font-bold text-gray-900">
+          <span className="text-lg font-bold text-gray-900 dark:text-gray-100">
             Schema Registry
           </span>
-          <span className="text-xs bg-gray-100 text-gray-500 px-1.5 py-0.5 rounded">
+          <span className="text-xs bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 px-1.5 py-0.5 rounded">
             by Gluendo
           </span>
         </Link>
@@ -37,13 +38,14 @@ export function Header() {
               href={item.href}
               className={`px-3 py-1.5 rounded-md transition-colors ${
                 isActive(item.href)
-                  ? "bg-gray-100 text-gray-900 font-medium"
-                  : "text-gray-600 hover:text-gray-900 hover:bg-gray-50"
+                  ? "bg-gray-100 dark:bg-gray-800 text-gray-900 dark:text-gray-100 font-medium"
+                  : "text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
               }`}
             >
               {item.label}
             </Link>
           ))}
+          <ThemeToggle />
         </nav>
       </div>
     </header>

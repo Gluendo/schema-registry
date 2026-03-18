@@ -25,11 +25,11 @@
 
 ## Catalog improvements
 
-- [ ] **Syntax highlighting** in JSON view (shiki — zero-runtime, SSR-compatible)
-- [ ] **Common type attribution** — in the schema viewer, show which common type a nested object came from (e.g., "homeAddress: Address") instead of just expanding inline
-- [ ] **Dark mode**
-- [ ] **OpenGraph images** for schema pages (link previews when sharing URLs)
-- [ ] **Schema statistics** on home page (total fields across all schemas, most-used common types, etc.)
+- [x] **Syntax highlighting** in JSON view (shiki, pre-rendered at build time)
+- [x] **Common type attribution** — inlined types show their original name (e.g., "Address", "Monetary Amount") in purple
+- [x] **Dark mode** — toggle in header, persisted to localStorage, respects system preference
+- [x] **OpenGraph metadata** for schema pages (title + description for link previews)
+- [x] **Schema statistics** on home page (domains, entities, versions, fields, common types)
 
 ## Tooling improvements
 

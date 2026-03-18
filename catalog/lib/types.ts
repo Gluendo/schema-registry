@@ -14,6 +14,7 @@ export interface Entity {
 export interface PropertyInfo {
   name: string;
   type: string;
+  typeName?: string; // e.g., "Address", "Monetary Amount" — from inlined common type title
   format?: string;
   description?: string;
   required: boolean;

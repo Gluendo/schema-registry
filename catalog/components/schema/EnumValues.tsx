@@ -19,7 +19,7 @@ export function EnumValues({ values }: { values: EnumValue[] }) {
         {shown.map((v) => (
           <span
             key={v.value}
-            className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-yellow-50 border border-yellow-200 rounded text-xs font-mono"
+            className="inline-flex items-center gap-1 px-1.5 py-0.5 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-700 rounded text-xs font-mono"
             title={v.description}
           >
             {v.value}

@@ -21,7 +21,7 @@ export function SearchBar() {
       type="text"
       onChange={(e) => handleChange(e.target.value)}
       placeholder="Start typing to search schemas..."
-      className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+      className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
     />
   );
 }

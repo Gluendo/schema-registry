@@ -36,7 +36,7 @@ export function SearchClient({ entries }: { entries: SearchEntry[] }) {
         value={query}
         onChange={(e) => setQuery(e.target.value)}
         placeholder="Search by name, field, or description..."
-        className="w-full px-4 py-3 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-6"
+        className="w-full px-4 py-3 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent mb-6"
         autoFocus
       />
 
@@ -45,26 +45,26 @@ export function SearchClient({ entries }: { entries: SearchEntry[] }) {
           <Link
             key={`${entry.domain}/${entry.entity}/${entry.version}`}
             href={entry.url}
-            className="block p-4 bg-white border border-gray-200 rounded-lg hover:border-blue-300 hover:shadow-sm transition-all"
+            className="block p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm transition-all"
           >
             <div className="flex items-center gap-2 mb-1">
-              <span className="px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded text-xs">
+              <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded text-xs">
                 {entry.domain}
               </span>
-              <span className="font-semibold text-gray-900">
+              <span className="font-semibold text-gray-900 dark:text-gray-100">
                 {entry.title}
               </span>
-              <span className="px-1.5 py-0.5 bg-gray-100 text-gray-500 rounded text-xs font-mono">
+              <span className="px-1.5 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-500 dark:text-gray-400 rounded text-xs font-mono">
                 {entry.version}
               </span>
             </div>
-            <p className="text-sm text-gray-500 line-clamp-1">
+            <p className="text-sm text-gray-500 dark:text-gray-400 line-clamp-1">
               {entry.description}
             </p>
           </Link>
         ))}
         {results.length === 0 && query.trim() && (
-          <p className="text-gray-500 text-sm">
+          <p className="text-gray-500 dark:text-gray-400 text-sm">
             No schemas found for &ldquo;{query}&rdquo;
           </p>
         )}

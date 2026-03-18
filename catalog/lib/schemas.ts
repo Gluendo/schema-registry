@@ -86,6 +86,11 @@ function parseProperties(
     if (prop.format) info.format = prop.format as string;
     if (prop.description) info.description = prop.description as string;
 
+    // Detect inlined common type by presence of title (bundler strips $id but keeps title)
+    if (prop.title && typeof prop.title === "string" && prop.properties) {
+      info.typeName = prop.title as string;
+    }
+
     // Enum values from oneOf/const
     if (prop.oneOf && Array.isArray(prop.oneOf)) {
       info.enumValues = (prop.oneOf as Record<string, unknown>[]).map((v) => ({

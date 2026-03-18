@@ -12,11 +12,11 @@ export function SchemaUrl({ url }: { url: string }) {
   };
 
   return (
-    <div className="mb-6 p-3 bg-gray-50 border border-gray-200 rounded-lg">
+    <div className="mb-6 p-3 bg-gray-50 dark:bg-gray-950 border border-gray-200 dark:border-gray-800 rounded-lg">
       <div className="flex items-center justify-between gap-3">
         <div className="min-w-0">
-          <span className="text-xs text-gray-500 block mb-1">
-            Schema URL — use this in CloudEvents <code className="text-gray-600">dataschema</code> or as a <code className="text-gray-600">$ref</code> target
+          <span className="text-xs text-gray-500 dark:text-gray-400 block mb-1">
+            Schema URL — use this in CloudEvents <code className="text-gray-600 dark:text-gray-400">dataschema</code> or as a <code className="text-gray-600 dark:text-gray-400">$ref</code> target
           </span>
           <a
             href={url}

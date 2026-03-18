@@ -146,13 +146,13 @@ export function PlaygroundClient({
     <div className="space-y-4">
       <div className="flex gap-4">
         <div className="flex-1">
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Schema
           </label>
           <select
             value={selectedSchema}
             onChange={(e) => handleSchemaChange(e.target.value)}
-            className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           >
             {schemas.map((s) => (
               <option key={s.id} value={s.id}>
@@ -162,26 +162,26 @@ export function PlaygroundClient({
           </select>
         </div>
         <div>
-          <label className="block text-sm font-medium text-gray-700 mb-1">
+          <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Validate
           </label>
-          <div className="flex rounded-md border border-gray-200 text-xs">
+          <div className="flex rounded-md border border-gray-200 dark:border-gray-700 text-xs">
             <button
               onClick={() => handleModeChange("data")}
               className={`px-3 py-2 rounded-l-md ${
                 mode === "data"
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-50"
+                  ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
+                  : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
               }`}
             >
               Data only
             </button>
             <button
               onClick={() => handleModeChange("cloudevent")}
-              className={`px-3 py-2 rounded-r-md border-l border-gray-200 ${
+              className={`px-3 py-2 rounded-r-md border-l border-gray-200 dark:border-gray-700 ${
                 mode === "cloudevent"
-                  ? "bg-gray-900 text-white"
-                  : "bg-white text-gray-600 hover:bg-gray-50"
+                  ? "bg-gray-900 text-white dark:bg-gray-100 dark:text-gray-900"
+                  : "bg-white dark:bg-gray-900 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800"
               }`}
             >
               CloudEvent
@@ -191,7 +191,7 @@ export function PlaygroundClient({
       </div>
 
       <div>
-        <label className="block text-sm font-medium text-gray-700 mb-1">
+        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
           {mode === "cloudevent"
             ? "Full CloudEvents message"
             : "Data payload"}
@@ -203,7 +203,7 @@ export function PlaygroundClient({
             setResult(null);
           }}
           rows={18}
-          className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm font-mono focus:outline-none focus:ring-2 focus:ring-blue-500"
+          className="w-full px-3 py-2 border border-gray-300 dark:border-gray-700 rounded-lg text-sm font-mono bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 focus:outline-none focus:ring-2 focus:ring-blue-500"
           spellCheck={false}
         />
       </div>
@@ -219,13 +219,13 @@ export function PlaygroundClient({
         <div
           className={`p-4 rounded-lg border ${
             result.valid
-              ? "bg-green-50 border-green-200"
-              : "bg-red-50 border-red-200"
+              ? "bg-green-50 dark:bg-green-900/20 border-green-200 dark:border-green-700"
+              : "bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-700"
           }`}
         >
           <span
             className={`text-sm font-semibold ${
-              result.valid ? "text-green-800" : "text-red-800"
+              result.valid ? "text-green-800 dark:text-green-200" : "text-red-800 dark:text-red-200"
             }`}
           >
             {result.valid
@@ -237,7 +237,7 @@ export function PlaygroundClient({
           {result.errors.length > 0 && (
             <ul className="mt-2 space-y-1">
               {result.errors.map((err, i) => (
-                <li key={i} className="text-sm text-red-700 font-mono">
+                <li key={i} className="text-sm text-red-700 dark:text-red-300 font-mono">
                   {err}
                 </li>
               ))}
