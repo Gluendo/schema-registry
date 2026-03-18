@@ -30,9 +30,7 @@ jobs:
         run: python3 tools/schema-tools.py all
 
       - name: Install Vacuum
-        run: |
-          curl -fsSL https://quobix.com/scripts/install_vacuum.sh | sh
-          sudo mv vacuum /usr/local/bin/
+        run: curl -fsSL https://quobix.com/scripts/install_vacuum.sh | sh
 
       - name: Lint schemas with Vacuum
         run: ./tools/lint.sh
