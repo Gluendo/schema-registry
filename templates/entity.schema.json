@@ -9,6 +9,22 @@
     "{{entity}}Id": {
       "type": "string",
       "description": "Unique identifier for the {{entity}}"
+    },
+    "status": {
+      "oneOf": [
+        { "const": "active", "description": "Currently active" },
+        { "const": "inactive", "description": "No longer active" }
+      ],
+      "description": "Current {{entity}} status"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when the {{entity}} was created (ISO 8601)"
+    },
+    "address": {
+      "$ref": "../../../../_common/types/address.schema.json",
+      "description": "Associated address (adjust $ref depth to match your schema location)"
     }
   }
 }

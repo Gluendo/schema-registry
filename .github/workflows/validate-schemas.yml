@@ -5,11 +5,15 @@ on:
     paths:
       - 'schemas/**'
       - 'ruleset.yaml'
+      - 'tools/**'
+      - 'templates/**'
   push:
     branches: [main]
     paths:
       - 'schemas/**'
       - 'ruleset.yaml'
+      - 'tools/**'
+      - 'templates/**'
 
 jobs:
   validate:
@@ -22,19 +26,13 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Validate JSON, formatting, and $ref targets
+        run: python3 tools/schema-tools.py all
+
       - name: Install Vacuum
         run: |
           curl -fsSL https://quobix.com/scripts/install_vacuum.sh | sh
           sudo mv vacuum /usr/local/bin/
-
-      - name: Validate JSON syntax
-        run: ./tools/validate-json.sh
-
-      - name: Check JSON formatting
-        run: ./tools/format-json.sh schemas --check
-
-      - name: Validate $ref targets
-        run: ./tools/validate-refs.sh
 
       - name: Lint schemas with Vacuum
         run: ./tools/lint.sh
