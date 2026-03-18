@@ -32,8 +32,11 @@ jobs:
       - name: Validate JSON, formatting, and $ref targets
         run: python3 tools/schema-tools.py all
 
+      - name: Bundle schemas (inline $ref)
+        run: python3 tools/schema-tools.py bundle schemas dist
+
       - name: Install Vacuum
         run: curl -fsSL https://quobix.com/scripts/install_vacuum.sh | sh
 
-      - name: Lint schemas with Vacuum
-        run: ./tools/lint.sh
+      - name: Lint bundled schemas with Vacuum
+        run: ./tools/lint.sh dist
