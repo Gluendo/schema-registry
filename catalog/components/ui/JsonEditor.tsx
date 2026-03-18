@@ -42,11 +42,11 @@ export function JsonEditor({
     return highlighted;
   }, [highlighted]);
 
-  // Initial highlight on mount
+  // Re-highlight whenever value changes externally (e.g. schema dropdown change)
   useEffect(() => {
     highlight(value);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [value]);
 
   return (
     <div
