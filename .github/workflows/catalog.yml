@@ -1,0 +1,40 @@
+name: Catalog Build
+
+on:
+  workflow_dispatch:
+  pull_request:
+    paths:
+      - 'catalog/**'
+      - 'schemas/**'
+  push:
+    branches: [main]
+    paths:
+      - 'catalog/**'
+      - 'schemas/**'
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Bundle schemas
+        run: python3 tools/schema-tools.py bundle schemas dist
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          cache: 'npm'
+          cache-dependency-path: catalog/package-lock.json
+
+      - name: Install dependencies
+        run: cd catalog && npm ci
+
+      - name: Build catalog
+        run: cd catalog && npm run build

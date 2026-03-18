@@ -1,0 +1,6 @@
+{
+  "buildCommand": "python3 tools/schema-tools.py bundle schemas dist && cd catalog && npm run build",
+  "outputDirectory": "catalog/.next",
+  "installCommand": "cd catalog && npm install",
+  "framework": "nextjs"
+}
