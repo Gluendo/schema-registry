@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getDomains, getEntities, getSchema, getVersions } from "@/lib/schemas";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { SchemaViewer } from "@/components/schema/SchemaViewer";
+import { SchemaUrl } from "@/components/schema/SchemaUrl";
 
 export function generateStaticParams() {
   const params: { domain: string; entity: string }[] = [];
@@ -44,6 +45,10 @@ export default async function EntityPage({
           { label: domain, href: `/domains/${domain}` },
           { label: entity },
         ]}
+      />
+
+      <SchemaUrl
+        url={`https://gluendo.github.io/schema-registry/schemas/domains/${domain}/${entity}/${latestVersion}/${entity}.schema.json`}
       />
 
       {versions.length > 1 && (

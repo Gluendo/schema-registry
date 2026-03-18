@@ -3,6 +3,7 @@ import { notFound } from "next/navigation";
 import { getDomains, getEntities, getSchema, getVersions } from "@/lib/schemas";
 import { Breadcrumb } from "@/components/ui/Breadcrumb";
 import { SchemaViewer } from "@/components/schema/SchemaViewer";
+import { SchemaUrl } from "@/components/schema/SchemaUrl";
 
 export function generateStaticParams() {
   const params: { domain: string; entity: string; version: string }[] = [];
@@ -40,7 +41,7 @@ export default async function VersionPage({
   if (!schema) notFound();
 
   const versions = getVersions(domain, entity);
-  const schemaUrl = `/schema-registry/schemas/domains/${domain}/${entity}/${version}/${entity}.schema.json`;
+  const schemaUrl = `https://gluendo.github.io/schema-registry/schemas/domains/${domain}/${entity}/${version}/${entity}.schema.json`;
 
   return (
     <div>
@@ -52,31 +53,23 @@ export default async function VersionPage({
         ]}
       />
 
-      <div className="mb-6 flex items-center justify-between">
-        <div className="flex items-center gap-2">
-          <span className="text-sm text-gray-500">Versions:</span>
-          {versions.map((v) => (
-            <Link
-              key={v}
-              href={`/domains/${domain}/${entity}/${v}`}
-              className={`px-2 py-0.5 rounded text-xs font-mono ${
-                v === version
-                  ? "bg-blue-100 text-blue-800"
-                  : "bg-gray-100 text-gray-600 hover:bg-gray-200"
-              }`}
-            >
-              {v}
-            </Link>
-          ))}
-        </div>
-        <a
-          href={schemaUrl}
-          target="_blank"
-          rel="noopener noreferrer"
-          className="text-xs text-gray-500 hover:text-blue-600 font-mono"
-        >
-          Raw JSON
-        </a>
+      <SchemaUrl url={schemaUrl} />
+
+      <div className="mb-6 flex items-center gap-2">
+        <span className="text-sm text-gray-500">Versions:</span>
+        {versions.map((v) => (
+          <Link
+            key={v}
+            href={`/domains/${domain}/${entity}/${v}`}
+            className={`px-2 py-0.5 rounded text-xs font-mono ${
+              v === version
+                ? "bg-blue-100 text-blue-800"
+                : "bg-gray-100 text-gray-600 hover:bg-gray-200"
+            }`}
+          >
+            {v}
+          </Link>
+        ))}
       </div>
 
       <SchemaViewer schema={schema} />
