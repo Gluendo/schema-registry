@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "prebuild": "python3 ../tools/schema-tools.py bundle ../schemas ../dist && cp -r ../dist/domains ../dist/_common public/schemas/",
+    "prebuild": "python3 ../tools/schema-tools.py bundle ../schemas ../dist && mkdir -p public/schemas && cp -r ../dist/domains ../dist/_common public/schemas/",
     "predev": "python3 ../tools/schema-tools.py bundle ../schemas ../dist && mkdir -p public/schemas && cp -r ../dist/domains ../dist/_common public/schemas/",
     "dev": "next dev",
     "build": "next build",
