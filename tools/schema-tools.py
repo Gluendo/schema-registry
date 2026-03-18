@@ -145,7 +145,8 @@ def inline_refs(obj, base_dir: Path, resolved_cache: dict):
                 resolved = resolve_ref(ref_file, base_dir, resolved_cache)
                 # Merge sibling keywords (e.g., description) with resolved content
                 # In JSON Schema 2020-12, siblings of $ref are evaluated
-                merged = dict(resolved)
+                # Strip $id and $schema from inlined refs to avoid duplicate identifiers
+                merged = {k: v for k, v in resolved.items() if k not in ("$id", "$schema")}
                 for k, v in obj.items():
                     if k != "$ref":
                         merged[k] = v
