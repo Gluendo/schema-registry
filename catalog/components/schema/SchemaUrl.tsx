@@ -29,7 +29,11 @@ export function SchemaUrl({ url }: { url: string }) {
         </div>
         <button
           onClick={copy}
-          className="shrink-0 px-3 py-1.5 text-xs bg-white border border-gray-200 rounded-md hover:bg-gray-50"
+          className={`shrink-0 px-3 py-1.5 text-xs font-medium rounded-md transition-colors ${
+            copied
+              ? "bg-green-600 text-white"
+              : "bg-blue-600 text-white hover:bg-blue-700"
+          }`}
         >
           {copied ? "Copied!" : "Copy URL"}
         </button>
