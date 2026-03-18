@@ -11,11 +11,11 @@ export default function HomePage() {
   const totalEntities = domains.reduce((sum, d) => sum + d.entityCount, 0);
 
   const stats = [
-    { label: "Domains", value: domains.length },
-    { label: "Entities", value: totalEntities },
-    { label: "Schema versions", value: schemas.length },
-    { label: "Fields", value: totalFields },
-    { label: "Common types", value: deps.length },
+    { label: "Domains", value: domains.length, href: "/" },
+    { label: "Entities", value: totalEntities, href: "/" },
+    { label: "Schema versions", value: schemas.length, href: "/changelog" },
+    { label: "Fields", value: totalFields, href: "/search" },
+    { label: "Common types", value: deps.length, href: "/commons" },
   ];
 
   return (
@@ -29,15 +29,16 @@ export default function HomePage() {
 
       <div className="mb-8 grid grid-cols-5 gap-3">
         {stats.map((stat) => (
-          <div
+          <Link
             key={stat.label}
-            className="p-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-center"
+            href={stat.href}
+            className="p-3 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg text-center hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm transition-all"
           >
             <div className="text-2xl font-bold text-blue-600">{stat.value}</div>
             <div className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">
               {stat.label}
             </div>
-          </div>
+          </Link>
         ))}
       </div>
 
@@ -47,29 +48,32 @@ export default function HomePage() {
 
       <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {domains.map((domain) => (
-          <Link
+          <div
             key={domain.name}
-            href={`/domains/${domain.name}`}
-            className="block p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg hover:border-blue-300 dark:hover:border-blue-700 hover:shadow-sm transition-all"
+            className="p-6 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-800 rounded-lg"
           >
-            <h2 className="text-lg font-semibold capitalize">
+            <Link
+              href={`/domains/${domain.name}`}
+              className="text-lg font-semibold capitalize hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
               {domain.name}
-            </h2>
+            </Link>
             <p className="mt-1 text-sm text-gray-500 dark:text-gray-400">
               {domain.entityCount}{" "}
               {domain.entityCount === 1 ? "entity" : "entities"}
             </p>
             <div className="mt-3 flex flex-wrap gap-1.5">
               {domain.entities.map((entity) => (
-                <span
+                <Link
                   key={entity}
-                  className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded text-xs"
+                  href={`/domains/${domain.name}/${entity}`}
+                  className="px-2 py-0.5 bg-gray-100 dark:bg-gray-800 text-gray-600 dark:text-gray-400 rounded text-xs hover:bg-blue-100 dark:hover:bg-blue-900 hover:text-blue-800 dark:hover:text-blue-200 transition-colors"
                 >
                   {entity}
-                </span>
+                </Link>
               ))}
             </div>
-          </Link>
+          </div>
         ))}
       </div>
     </div>
