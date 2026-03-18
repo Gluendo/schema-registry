@@ -226,7 +226,53 @@ export function getRawSchema(
 // Dependency graph — which domain schemas use which common types
 // ---------------------------------------------------------------------------
 
+const COMMON_DIR = path.join(DIST_DIR, "_common");
 const SOURCE_DIR = path.resolve(process.cwd(), "../schemas");
+
+// ---------------------------------------------------------------------------
+// Common types and enums
+// ---------------------------------------------------------------------------
+
+export interface CommonSchema {
+  category: "types" | "enums";
+  name: string;
+  id: string;
+  title: string;
+  description: string;
+  raw: Record<string, unknown>;
+  properties: PropertyInfo[];
+}
+
+export function getCommonSchemas(): CommonSchema[] {
+  const results: CommonSchema[] = [];
+
+  for (const category of ["types", "enums"] as const) {
+    const dir = path.join(COMMON_DIR, category);
+    if (!isDir(dir)) continue;
+
+    for (const file of fs.readdirSync(dir).filter((f) => f.endsWith(".schema.json")).sort()) {
+      try {
+        const raw = JSON.parse(fs.readFileSync(path.join(dir, file), "utf-8"));
+        const name = file.replace(".schema.json", "");
+        results.push({
+          category,
+          name,
+          id: raw.$id ?? "",
+          title: raw.title ?? name,
+          description: raw.description ?? "",
+          raw,
+          properties: raw.properties
+            ? parseProperties(raw.properties, raw.required)
+            : [],
+        });
+      } catch {
+        // skip
+      }
+    }
+  }
+
+  return results;
+}
 const EXAMPLES_DIR = path.resolve(process.cwd(), "../examples");
 
 // ---------------------------------------------------------------------------
