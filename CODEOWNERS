@@ -15,5 +15,8 @@
 # ADRs require platform team review
 /adr/ @Gluendo/platform
 
+# Frozen version snapshots — managed by CI, platform team must approve any manual changes
+/schemas/domains/*/*/v*/ @Gluendo/platform
+
 # Tooling and CI require platform team review
 /tools/ @Gluendo/platform

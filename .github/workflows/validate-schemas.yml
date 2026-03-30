@@ -31,6 +31,16 @@ jobs:
         with:
           python-version: '3.12'
 
+      - name: Reject changes to frozen version snapshots
+        if: github.event_name == 'pull_request'
+        run: |
+          FROZEN=$(git diff --name-only origin/${{ github.base_ref }}...HEAD -- 'schemas/domains/*/*/v*/' || true)
+          if [ -n "$FROZEN" ]; then
+            echo "::error::Frozen version snapshots must not be modified in PRs. These are managed by CI."
+            echo "$FROZEN"
+            exit 1
+          fi
+
       - name: Validate JSON, formatting, $ref targets, and compatibility
         run: python3 tools/schema-tools.py all
 
