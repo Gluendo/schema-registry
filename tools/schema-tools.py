@@ -552,7 +552,7 @@ def format_diff_section(changes: tuple[list[str], list[str], list[str]],
     else:
         recommended = "patch"
 
-    # Check actual version bump if both versions are known
+    # Check actual version bump against recommendation
     verdict = ""
     if old_ver and new_ver:
         try:
@@ -560,11 +560,18 @@ def format_diff_section(changes: tuple[list[str], list[str], list[str]],
             new_v = parse_version(new_ver)
             if recommended == "major" and new_v[0] <= old_v[0]:
                 verdict = f"\n\n> ⚠️ **Breaking changes detected** — this requires a **major** version bump (`v{old_v[0]+1}.0.0`), but `$id` is `{new_ver}`"
-            elif recommended == "minor" and new_v[0] == old_v[0] and new_v[1] <= old_v[1] and new_v[2] != old_v[2] + 1:
-                verdict = f"\n\n> ℹ️ Suggested bump: **minor** (`{old_ver}` → `v{old_v[0]}.{old_v[1]+1}.0`)"
-            elif recommended == "major":
+            elif recommended == "major" and new_v[0] > old_v[0]:
                 verdict = "\n\n> ✅ Major version bump — breaking changes are expected"
-            # If the bump looks correct, say nothing
+            elif recommended == "minor" and new_v[0] == old_v[0] and new_v[1] > old_v[1]:
+                verdict = f"\n\n> ✅ Minor version bump — compatible with changes ({old_ver} → {new_ver})"
+            elif recommended == "minor" and new_v[0] > old_v[0]:
+                verdict = f"\n\n> ✅ Major version bump — exceeds the minimum required minor bump"
+            elif recommended == "minor":
+                verdict = f"\n\n> ⚠️ These changes require at least a **minor** bump (`v{old_v[0]}.{old_v[1]+1}.0`), but `$id` is `{new_ver}`"
+            elif recommended == "patch" and (new_v[0] > old_v[0] or new_v[1] > old_v[1] or new_v[2] > old_v[2]):
+                verdict = f"\n\n> ✅ Version bump compatible with changes (metadata only, {old_ver} → {new_ver})"
+            else:
+                verdict = f"\n\n> ⚠️ Changes detected but `$id` version was not bumped ({old_ver})"
         except (ValueError, IndexError):
             pass
 
