@@ -1,0 +1,14 @@
+{
+  "name": "eventcatalog",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "dev": "npx eventcatalog dev",
+    "build": "npx eventcatalog build",
+    "preview": "npx eventcatalog preview",
+    "generate": "node generate.mjs"
+  },
+  "dependencies": {
+    "@eventcatalog/core": "^3.26.14"
+  }
+}

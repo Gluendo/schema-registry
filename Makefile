@@ -1,4 +1,4 @@
-.PHONY: validate format lint bundle compat examples all dev build clean
+.PHONY: validate format lint bundle compat examples all dev build clean ec-generate ec-dev ec-build
 
 # Schema validation and formatting
 validate:
@@ -50,6 +50,16 @@ demo-produce:
 demo-produce-invalid:
 	$(MAKE) -C demo produce-invalid
 
+# EventCatalog (generate from schemas, then dev/build)
+ec-generate:
+	node eventcatalog/generate.mjs
+
+ec-dev: ec-generate
+	cd eventcatalog && npm run dev
+
+ec-build: ec-generate
+	cd eventcatalog && npm run build
+
 # Clean generated files
 clean:
-	rm -rf dist catalog/.next catalog/out catalog/public/schemas
+	rm -rf dist catalog/.next catalog/out catalog/public/schemas eventcatalog/domains

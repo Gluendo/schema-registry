@@ -5,3 +5,10 @@ dist/
 catalog/.next/
 catalog/node_modules/
 catalog/out/
+
+# EventCatalog (generated content + build artifacts)
+eventcatalog/domains/
+eventcatalog/events/
+eventcatalog/node_modules/
+eventcatalog/.eventcatalog-core/
+eventcatalog/dist/

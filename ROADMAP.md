@@ -31,6 +31,13 @@
 - [x] **OpenGraph metadata** for schema pages (title + description for link previews)
 - [x] **Schema statistics** on home page (domains, entities, versions, fields, common types)
 
+## EventCatalog integration
+
+- [x] **EventCatalog generator** — `make ec-dev` generates EventCatalog-compatible content from `schemas/domains/` and serves it locally
+- [ ] **EventCatalog deployment** — deploy EventCatalog static build to GitHub Pages alongside (or replacing) the current catalog
+- [ ] **Producers/consumers mapping** — enrich generated EventCatalog content with service ownership and consumer relationships
+- [ ] **Evaluate replacing custom catalog** — once EventCatalog covers all current catalog features, retire the Next.js app
+
 ## Tooling improvements
 
 - [ ] **Pre-commit hooks** — run `schema-tools.py all` before commit to catch issues early

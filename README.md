@@ -62,6 +62,16 @@ cd catalog && npm install && npm run dev
 # Open http://localhost:3000/schema-registry
 ```
 
+### Run EventCatalog (alternative visualization)
+
+```bash
+cd eventcatalog && npm install
+make ec-dev
+# Open http://localhost:3000
+```
+
+EventCatalog provides service dependency graphs, domain exploration, and schema visualization generated from the same `schemas/` directory.
+
 ## Architecture decisions
 
 The design is documented in [Architecture Decision Records](adr/):
@@ -89,6 +99,7 @@ schemas/
   _common/enums/        ISO enums (country codes, currency codes)
   domains/              Domain schemas (one schema per entity per version)
 catalog/                Next.js catalog app (static export → GitHub Pages)
+eventcatalog/           EventCatalog integration (generator + config)
 tools/
   schema-tools.py       Validate, format, check $refs, bundle schemas
   lint.sh               Vacuum linter wrapper
