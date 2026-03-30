@@ -1,0 +1,68 @@
+name: Schema Diff
+
+on:
+  pull_request:
+    paths:
+      - 'schemas/**'
+
+permissions:
+  contents: read
+  pull-requests: write
+
+jobs:
+  diff:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Extract base schemas
+        run: |
+          mkdir -p /tmp/base-schemas
+          git archive origin/${{ github.base_ref }} -- schemas/ | tar -x -C /tmp/base-schemas
+
+      - name: Generate diff
+        id: diff
+        run: |
+          python3 tools/schema-tools.py diff /tmp/base-schemas/schemas schemas > /tmp/diff-output.md
+          if [ -s /tmp/diff-output.md ]; then
+            echo "has_diff=true" >> "$GITHUB_OUTPUT"
+          fi
+
+      - name: Comment on PR
+        if: steps.diff.outputs.has_diff == 'true'
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const fs = require('fs');
+            const body = fs.readFileSync('/tmp/diff-output.md', 'utf8');
+            if (!body.trim()) return;
+            const marker = '<!-- schema-diff -->';
+            const fullBody = `${marker}\n## Schema Diff\n\n${body}`;
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+            const existing = comments.find(c => c.body.includes(marker));
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body: fullBody,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body: fullBody,
+              });
+            }

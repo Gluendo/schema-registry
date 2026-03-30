@@ -3,16 +3,18 @@
  * Generate EventCatalog content from the schema registry.
  *
  * Reads  ../schemas/domains/{domain}/{entity}/{version}/{entity}.schema.json
- * Emits  domains/, events/ directories that EventCatalog understands.
+ * Reads  services.yaml for producer/consumer mappings
+ * Emits  domains/, services/ directories that EventCatalog understands.
  */
 
 import { readFileSync, mkdirSync, writeFileSync, cpSync, readdirSync, existsSync, rmSync } from 'fs';
 import { join, resolve, dirname } from 'path';
 
-const SCHEMAS_ROOT = resolve(dirname(new URL(import.meta.url).pathname), '..', 'schemas');
+const BASE = resolve(dirname(new URL(import.meta.url).pathname));
+const SCHEMAS_ROOT = resolve(BASE, '..', 'schemas');
 const DOMAINS_SRC = join(SCHEMAS_ROOT, 'domains');
-const OUT_DOMAINS = resolve(dirname(new URL(import.meta.url).pathname), 'domains');
-const OUT_EVENTS = resolve(dirname(new URL(import.meta.url).pathname), 'events');
+const OUT_DOMAINS = join(BASE, 'domains');
+const OUT_SERVICES = join(BASE, 'services');
 
 // ---------------------------------------------------------------------------
 // Helpers
@@ -40,7 +42,52 @@ function readSchema(path) {
   }
 }
 
-function eventFrontmatter(id, name, version, summary, domain) {
+/** Minimal YAML parser for our simple services.yaml (no dependency needed). */
+function parseServicesYaml(text) {
+  const services = [];
+  let current = null;
+  let currentList = null;
+
+  for (const raw of text.split('\n')) {
+    const line = raw.trimEnd();
+    // New service entry
+    if (/^\s{2}- id:\s*(.+)/.test(line)) {
+      if (current) services.push(current);
+      current = { id: line.match(/id:\s*(.+)/)[1].trim(), produces: [], consumes: [] };
+      currentList = null;
+      continue;
+    }
+    if (!current) continue;
+    // List header (produces: / consumes: with no value)
+    const listHeader = line.match(/^\s{4}(produces|consumes):\s*$/);
+    if (listHeader) {
+      currentList = listHeader[1];
+      continue;
+    }
+    // Simple key-value fields
+    const kv = line.match(/^\s{4,6}(\w+):\s*(.+)/);
+    if (kv) {
+      const [, key, val] = kv;
+      if (key === 'language' || key === 'url') {
+        if (!current.repository) current.repository = {};
+        current.repository[key] = val.trim();
+      } else {
+        current[key] = val.trim();
+      }
+      currentList = null;
+      continue;
+    }
+    // List items under produces/consumes
+    const item = line.match(/^\s{6,8}- (.+)/);
+    if (item && currentList) {
+      current[currentList].push(item[1].trim());
+    }
+  }
+  if (current) services.push(current);
+  return services;
+}
+
+function eventFrontmatter(id, name, version, summary, { producers, consumers } = {}) {
   const lines = [
     '---',
     `id: ${id}`,
@@ -49,16 +96,48 @@ function eventFrontmatter(id, name, version, summary, domain) {
     `summary: |`,
     `  ${summary}`,
     `schemaPath: schema.json`,
-    '---',
   ];
+  if (producers && producers.length > 0) {
+    lines.push(`producers:`);
+    for (const p of producers) lines.push(`  - ${p}`);
+  }
+  if (consumers && consumers.length > 0) {
+    lines.push(`consumers:`);
+    for (const c of consumers) lines.push(`  - ${c}`);
+  }
+  lines.push('---');
   return lines.join('\n');
 }
+
+// ---------------------------------------------------------------------------
+// Load services config
+// ---------------------------------------------------------------------------
+
+const servicesFile = join(BASE, 'services.yaml');
+const services = existsSync(servicesFile)
+  ? parseServicesYaml(readFileSync(servicesFile, 'utf-8'))
+  : [];
+
+// Build lookup: eventId -> [serviceId, ...]
+const producersOf = {};
+const consumersOf = {};
+for (const svc of services) {
+  for (const eventId of svc.produces || []) {
+    (producersOf[eventId] ??= []).push(svc.id);
+  }
+  for (const eventId of svc.consumes || []) {
+    (consumersOf[eventId] ??= []).push(svc.id);
+  }
+}
+
+// Track latest version per event for service frontmatter
+const eventLatestVersion = {};
 
 // ---------------------------------------------------------------------------
 // Clean previous output
 // ---------------------------------------------------------------------------
 
-for (const dir of [OUT_DOMAINS, OUT_EVENTS]) {
+for (const dir of [OUT_DOMAINS, OUT_SERVICES]) {
   if (existsSync(dir)) rmSync(dir, { recursive: true });
 }
 
@@ -120,12 +199,18 @@ for (const domain of domains) {
     const name = schema.title || titleCase(entity);
     const summary = schema.description || `${name} schema`;
 
+    // Track for service generation
+    eventLatestVersion[eventId] = latest.semver;
+
     // --- Latest version (at event root) ---
     const eventOut = join(OUT_DOMAINS, domainTitle, 'events', name);
     mkdirSync(eventOut, { recursive: true });
 
     writeFileSync(join(eventOut, 'index.mdx'), [
-      eventFrontmatter(eventId, name, latest.semver, summary, domain),
+      eventFrontmatter(eventId, name, latest.semver, summary, {
+        producers: producersOf[eventId],
+        consumers: consumersOf[eventId],
+      }),
       '',
       `## ${name}`,
       '',
@@ -144,7 +229,10 @@ for (const domain of domains) {
       mkdirSync(versionedOut, { recursive: true });
 
       writeFileSync(join(versionedOut, 'index.mdx'), [
-        eventFrontmatter(eventId, oldSchema.title || name, v.semver, oldSchema.description || summary, domain),
+        eventFrontmatter(eventId, oldSchema.title || name, v.semver, oldSchema.description || summary, {
+          producers: producersOf[eventId],
+          consumers: consumersOf[eventId],
+        }),
         '',
         `## ${oldSchema.title || name}`,
         '',
@@ -156,6 +244,59 @@ for (const domain of domains) {
 
     console.log(`  OK  ${eventId}  latest=${latest.semver}  versions=${versions.map(v => v.semver).join(', ')}`);
   }
+}
+
+// ---------------------------------------------------------------------------
+// Emit services
+// ---------------------------------------------------------------------------
+
+for (const svc of services) {
+  const svcOut = join(OUT_SERVICES, svc.name);
+  mkdirSync(svcOut, { recursive: true });
+
+  const sends = (svc.produces || [])
+    .filter(id => eventLatestVersion[id])
+    .map(id => ({ id, version: eventLatestVersion[id] }));
+  const receives = (svc.consumes || [])
+    .filter(id => eventLatestVersion[id])
+    .map(id => ({ id, version: eventLatestVersion[id] }));
+
+  const lines = [
+    '---',
+    `id: ${svc.id}`,
+    `name: ${svc.name}`,
+    `version: "1.0.0"`,
+  ];
+  if (svc.summary) {
+    lines.push(`summary: |`);
+    lines.push(`  ${svc.summary}`);
+  }
+  if (svc.repository) {
+    lines.push(`repository:`);
+    if (svc.repository.language) lines.push(`  language: ${svc.repository.language}`);
+    if (svc.repository.url) lines.push(`  url: ${svc.repository.url}`);
+  }
+  if (sends.length > 0) {
+    lines.push(`sends:`);
+    for (const s of sends) {
+      lines.push(`  - id: ${s.id}`);
+      lines.push(`    version: "${s.version}"`);
+    }
+  }
+  if (receives.length > 0) {
+    lines.push(`receives:`);
+    for (const r of receives) {
+      lines.push(`  - id: ${r.id}`);
+      lines.push(`    version: "${r.version}"`);
+    }
+  }
+  lines.push('---');
+  lines.push('');
+  lines.push(svc.summary || `${svc.name} service.`);
+  lines.push('');
+
+  writeFileSync(join(svcOut, 'index.mdx'), lines.join('\n'));
+  console.log(`  SVC ${svc.id}  sends=${sends.map(s => s.id).join(', ') || '–'}  receives=${receives.map(r => r.id).join(', ') || '–'}`);
 }
 
 console.log('\nDone. Run `npm run dev` to preview the catalog.');

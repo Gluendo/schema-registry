@@ -1,0 +1,27 @@
+services:
+  - id: demo-producer
+    name: Demo Producer
+    summary: Python producer that publishes employee lifecycle events to NATS
+    repository:
+      language: Python
+      url: https://github.com/Gluendo/schema-registry/tree/main/demo/producer
+    produces:
+      - hr.employee
+
+  - id: demo-consumer-ts
+    name: Demo Consumer (TypeScript)
+    summary: TypeScript consumer that validates and processes employee events from NATS
+    repository:
+      language: TypeScript
+      url: https://github.com/Gluendo/schema-registry/tree/main/demo/consumer-ts
+    consumes:
+      - hr.employee
+
+  - id: demo-consumer-java
+    name: Demo Consumer (Java)
+    summary: Java consumer that validates and processes employee events from NATS
+    repository:
+      language: Java
+      url: https://github.com/Gluendo/schema-registry/tree/main/demo/consumer-java
+    consumes:
+      - hr.employee

@@ -34,14 +34,14 @@
 ## EventCatalog integration
 
 - [x] **EventCatalog generator** — `make ec-dev` generates EventCatalog-compatible content from `schemas/domains/` and serves it locally
-- [ ] **EventCatalog deployment** — deploy EventCatalog static build to GitHub Pages alongside (or replacing) the current catalog
-- [ ] **Producers/consumers mapping** — enrich generated EventCatalog content with service ownership and consumer relationships
+- [x] **EventCatalog deployment** — built and deployed alongside main catalog at `/eventcatalog/`
+- [x] **Producers/consumers mapping** — `services.yaml` config drives service generation with sends/receives wiring
 - [ ] **Evaluate replacing custom catalog** — once EventCatalog covers all current catalog features, retire the Next.js app
 
 ## Tooling improvements
 
-- [ ] **Pre-commit hooks** — run `schema-tools.py all` before commit to catch issues early
-- [ ] **Schema diff in PRs** — GitHub Action that comments on PRs with a summary of schema changes (added/removed/changed fields)
+- [x] **Pre-commit hooks** — `make hooks` installs `.githooks/pre-commit` that validates schemas before commit
+- [x] **Schema diff in PRs** — GitHub Action posts field-level schema diff as PR comment via `schema-tools.py diff`
 - [ ] **Code generation** — generate TypeScript/Java/Python types from schemas (evaluate quicktype, json-schema-to-typescript, or similar)
 - [ ] **Schema deprecation tracking** — mark schemas as deprecated, show warnings in catalog, enforce deprecation timelines
 

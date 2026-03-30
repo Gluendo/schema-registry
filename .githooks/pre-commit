@@ -1,0 +1,18 @@
+#!/usr/bin/env bash
+# Pre-commit hook: validate schemas before committing
+
+# Check if any staged files are schema files
+SCHEMA_FILES=$(git diff --cached --name-only --diff-filter=ACM | grep 'schemas/.*\.schema\.json$')
+
+if [ -z "$SCHEMA_FILES" ]; then
+  exit 0
+fi
+
+echo "Schema files staged — running validation..."
+python3 tools/schema-tools.py all
+if [ $? -ne 0 ]; then
+  echo ""
+  echo "Schema validation failed. Fix the issues above and try again."
+  echo "To skip this check: git commit --no-verify"
+  exit 1
+fi

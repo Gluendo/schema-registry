@@ -10,6 +10,7 @@ Usage:
     python3 tools/schema-tools.py compat <dir>          # Check backward compatibility between versions
     python3 tools/schema-tools.py examples <dir>        # Validate example payloads against schemas
     python3 tools/schema-tools.py all <dir>             # Run validate + format --check + refs + compat
+    python3 tools/schema-tools.py diff <base> <head>    # Compare two schema trees (Markdown output)
 """
 
 import json
@@ -469,6 +470,116 @@ def validate_examples(schema_dir: str) -> int:
 
 
 # ---------------------------------------------------------------------------
+# Schema diff — compare two schema directory trees
+# ---------------------------------------------------------------------------
+
+def diff_schemas(base_dir: str, head_dir: str) -> str:
+    """Compare two schema directory trees and return a Markdown summary."""
+    base = Path(base_dir) / "domains" if Path(base_dir).joinpath("domains").is_dir() else Path(base_dir)
+    head = Path(head_dir) / "domains" if Path(head_dir).joinpath("domains").is_dir() else Path(head_dir)
+
+    base_schemas = {str(p.relative_to(base)): p for p in sorted(base.rglob("*.schema.json"))} if base.is_dir() else {}
+    head_schemas = {str(p.relative_to(head)): p for p in sorted(head.rglob("*.schema.json"))} if head.is_dir() else {}
+
+    all_keys = sorted(set(base_schemas.keys()) | set(head_schemas.keys()))
+    sections: list[str] = []
+
+    for key in all_keys:
+        in_base = key in base_schemas
+        in_head = key in head_schemas
+
+        if not in_base and in_head:
+            # New schema
+            try:
+                schema = json.loads(head_schemas[key].read_text(encoding="utf-8"))
+                title = schema.get("title", key)
+                props = list(schema.get("properties", {}).keys())
+                fields_str = ", ".join(f"`{p}`" for p in props[:10])
+                if len(props) > 10:
+                    fields_str += f", ... (+{len(props) - 10} more)"
+                sections.append(f"### New: `{key}`\n\n**{title}** — {len(props)} fields: {fields_str}")
+            except (json.JSONDecodeError, OSError):
+                sections.append(f"### New: `{key}`")
+
+        elif in_base and not in_head:
+            # Removed schema
+            sections.append(f"### Removed: `{key}`")
+
+        elif in_base and in_head:
+            # Possibly modified
+            try:
+                old_data = json.loads(base_schemas[key].read_text(encoding="utf-8"))
+                new_data = json.loads(head_schemas[key].read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                continue
+
+            if old_data == new_data:
+                continue
+
+            old_props = collect_properties(old_data)
+            new_props = collect_properties(new_data)
+            old_required = set(old_data.get("required", []))
+            new_required = set(new_data.get("required", []))
+
+            changes: list[str] = []
+
+            added = sorted(set(new_props.keys()) - set(old_props.keys()))
+            removed = sorted(set(old_props.keys()) - set(new_props.keys()))
+
+            for field in added:
+                req = " **(required)**" if field in new_required else ""
+                changes.append(f"- Added `{field}`{req}")
+
+            for field in removed:
+                changes.append(f"- Removed `{field}`")
+
+            for field in sorted(set(old_props.keys()) & set(new_props.keys())):
+                old_type = old_props[field].get("type")
+                new_type = new_props[field].get("type")
+                if old_type != new_type:
+                    changes.append(f"- Changed `{field}` type: `{old_type}` → `{new_type}`")
+
+                # Enum changes
+                old_enum = set()
+                new_enum = set()
+                if old_props[field].get("oneOf"):
+                    old_enum = {str(v.get("const", "")) for v in old_props[field]["oneOf"] if "const" in v}
+                if new_props[field].get("oneOf"):
+                    new_enum = {str(v.get("const", "")) for v in new_props[field]["oneOf"] if "const" in v}
+                if old_enum or new_enum:
+                    added_vals = new_enum - old_enum
+                    removed_vals = old_enum - new_enum
+                    if added_vals:
+                        changes.append(f"- Added enum values for `{field}`: {', '.join(f'`{v}`' for v in sorted(added_vals))}")
+                    if removed_vals:
+                        changes.append(f"- Removed enum values for `{field}`: {', '.join(f'`{v}`' for v in sorted(removed_vals))}")
+
+            # Required changes
+            added_req = new_required - old_required
+            removed_req = old_required - new_required
+            for field in sorted(added_req):
+                if field not in added:  # don't double-report new fields
+                    changes.append(f"- Made `{field}` **required**")
+            for field in sorted(removed_req):
+                changes.append(f"- Made `{field}` optional")
+
+            # Description change
+            old_desc = old_data.get("description", "")
+            new_desc = new_data.get("description", "")
+            if old_desc != new_desc:
+                changes.append(f"- Updated description")
+
+            if changes:
+                title = new_data.get("title", key)
+                sections.append(f"### Modified: `{key}`\n\n" + "\n".join(changes))
+
+    if not sections:
+        return ""
+
+    return "\n\n".join(sections) + "\n"
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -548,6 +659,16 @@ def main():
             print(f"==> {errors} example validation error(s)")
             sys.exit(1)
         print("==> All examples are valid")
+
+    elif command == "diff":
+        if len(positional) < 2:
+            print("Usage: schema-tools.py diff <base-dir> <head-dir>")
+            sys.exit(1)
+        head_arg = positional[1]
+        output = diff_schemas(dir_arg, head_arg)
+        if output:
+            print(output)
+        sys.exit(0)
 
     elif command == "all":
         print("==> Validating JSON syntax")

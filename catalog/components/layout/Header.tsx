@@ -46,6 +46,14 @@ export function Header() {
               {item.label}
             </Link>
           ))}
+          <a
+            href="/schema-registry/eventcatalog/"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="px-3 py-1.5 rounded-md transition-colors text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 hover:bg-gray-50 dark:hover:bg-gray-800"
+          >
+            EventCatalog ↗
+          </a>
           <ThemeToggle />
         </nav>
       </div>

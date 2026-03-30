@@ -150,3 +150,13 @@ To propose a new common type or enum, open a PR against `schemas/_common/` and r
 - [ ] `$ref` targets point to existing schemas
 - [ ] Version bump is appropriate (patch/minor/major)
 - [ ] If breaking change: migration plan documented, major version bumped
+
+## Local setup
+
+Install the pre-commit hook to validate schemas before each commit:
+
+```bash
+make hooks
+```
+
+This runs `schema-tools.py all` automatically when you commit schema changes. To skip temporarily: `git commit --no-verify`.

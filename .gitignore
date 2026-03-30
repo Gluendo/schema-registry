@@ -9,6 +9,7 @@ catalog/out/
 # EventCatalog (generated content + build artifacts)
 eventcatalog/domains/
 eventcatalog/events/
+eventcatalog/services/
 eventcatalog/node_modules/
 eventcatalog/.eventcatalog-core/
 eventcatalog/dist/

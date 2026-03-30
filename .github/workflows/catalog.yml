@@ -6,6 +6,7 @@ on:
     branches: [main]
     paths:
       - 'catalog/**'
+      - 'eventcatalog/**'
       - 'schemas/**'
       - 'tools/**'
 
@@ -33,14 +34,18 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '20'
-          cache: 'npm'
-          cache-dependency-path: catalog/package-lock.json
 
-      - name: Install dependencies
-        run: cd catalog && npm ci
+      - name: Build main catalog
+        run: cd catalog && npm ci && npm run build
 
-      - name: Build (bundles schemas + copies to public + static export)
-        run: cd catalog && npm run build
+      - name: Build EventCatalog
+        run: |
+          cd eventcatalog && npm ci
+          node generate.mjs
+          npx eventcatalog build
+
+      - name: Merge into single output
+        run: cp -r eventcatalog/dist catalog/out/eventcatalog
 
       - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v3

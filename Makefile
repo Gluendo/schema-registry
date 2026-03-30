@@ -1,4 +1,9 @@
-.PHONY: validate format lint bundle compat examples all dev build clean ec-generate ec-dev ec-build
+.PHONY: validate format lint bundle compat examples all dev build preview clean ec-generate ec-dev ec-build hooks
+
+# Install git hooks
+hooks:
+	git config core.hooksPath .githooks
+	@echo "Git hooks installed (.githooks/pre-commit)"
 
 # Schema validation and formatting
 validate:
@@ -30,9 +35,11 @@ all: validate examples lint
 dev: bundle
 	cd catalog && npm run dev
 
-# Build catalog for production (static export)
-build: bundle
+# Build catalog for production (static export) with EventCatalog
+build: bundle ec-generate
 	cd catalog && npm run build
+	cd eventcatalog && npx eventcatalog build
+	cp -r eventcatalog/dist catalog/out/eventcatalog
 
 # Demo (NATS + producer/consumers)
 demo-up:
@@ -60,6 +67,13 @@ ec-dev: ec-generate
 ec-build: ec-generate
 	cd eventcatalog && npm run build
 
+# Serve production build locally (mimics GitHub Pages)
+preview: build
+	@mkdir -p /tmp/schema-registry-preview/schema-registry
+	@cp -r catalog/out/* /tmp/schema-registry-preview/schema-registry/
+	@echo "Serving at http://localhost:4000/schema-registry/"
+	@npx http-server /tmp/schema-registry-preview -p 4000 -c-1
+
 # Clean generated files
 clean:
-	rm -rf dist catalog/.next catalog/out catalog/public/schemas eventcatalog/domains
+	rm -rf dist catalog/.next catalog/out catalog/public/schemas eventcatalog/domains eventcatalog/services eventcatalog/dist

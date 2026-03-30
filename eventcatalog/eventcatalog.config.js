@@ -5,5 +5,6 @@ export default {
   tagline: 'Canonical message schemas for integration',
   organizationName: 'Gluendo',
   homepageLink: 'https://gluendo.com',
-  landingPage: '/',
+  landingPage: '/discover/events',
+  base: '/schema-registry/eventcatalog',
 };
