@@ -1,0 +1,128 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:gluendo:schema:hr:employee:v1.2.0",
+  "title": "Employee",
+  "description": "Canonical representation of an employee entity. Produced by HR systems (e.g., Workday, SAP HCM) on employee lifecycle events (created, updated, terminated).",
+  "type": "object",
+  "required": [
+    "employeeId"
+  ],
+  "properties": {
+    "employeeId": {
+      "type": "string",
+      "description": "Unique employee identifier as assigned by the source HR system"
+    },
+    "firstName": {
+      "type": "string",
+      "description": "Employee's first (given) name"
+    },
+    "lastName": {
+      "type": "string",
+      "description": "Employee's last (family) name"
+    },
+    "email": {
+      "type": "string",
+      "format": "email",
+      "description": "Professional email address"
+    },
+    "department": {
+      "type": "string",
+      "description": "Department or organizational unit the employee belongs to"
+    },
+    "costCenter": {
+      "type": "string",
+      "description": "Cost center code associated with the employee"
+    },
+    "position": {
+      "type": "string",
+      "description": "Job title or position name"
+    },
+    "employmentType": {
+      "oneOf": [
+        {
+          "const": "full-time",
+          "description": "Full-time employee"
+        },
+        {
+          "const": "part-time",
+          "description": "Part-time employee"
+        },
+        {
+          "const": "contractor",
+          "description": "External contractor"
+        },
+        {
+          "const": "intern",
+          "description": "Internship position"
+        }
+      ],
+      "description": "Type of employment"
+    },
+    "hireDate": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the employee was hired (ISO 8601)"
+    },
+    "terminationDate": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "date",
+      "description": "Date the employee was terminated, if applicable (ISO 8601). Null if still active."
+    },
+    "status": {
+      "oneOf": [
+        {
+          "const": "active",
+          "description": "Currently employed"
+        },
+        {
+          "const": "inactive",
+          "description": "On leave or temporarily inactive"
+        },
+        {
+          "const": "terminated",
+          "description": "Employment ended"
+        },
+        {
+          "const": "on-leave",
+          "description": "On approved leave of absence"
+        }
+      ],
+      "description": "Current employment status"
+    },
+    "homeAddress": {
+      "$ref": "../../../../_common/types/address.schema.json",
+      "description": "Employee's home address"
+    },
+    "contactInfo": {
+      "$ref": "../../../../_common/types/contact-info.schema.json",
+      "description": "Employee's personal contact information"
+    },
+    "managerId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Employee ID of the direct manager, if applicable"
+    },
+    "workLocation": {
+      "oneOf": [
+        {
+          "const": "office",
+          "description": "Works from office"
+        },
+        {
+          "const": "remote",
+          "description": "Works remotely"
+        },
+        {
+          "const": "hybrid",
+          "description": "Hybrid work arrangement"
+        }
+      ],
+      "description": "Employee's primary work location type"
+    }
+  }
+}

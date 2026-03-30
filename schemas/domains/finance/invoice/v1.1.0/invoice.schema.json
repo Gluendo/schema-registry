@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:gluendo:schema:finance:invoice:v1.1.0",
+  "title": "Invoice",
+  "description": "Canonical representation of an invoice entity. Produced by ERP or billing systems on invoice lifecycle events (submitted, approved, paid, cancelled).",
+  "type": "object",
+  "required": [
+    "invoiceId"
+  ],
+  "properties": {
+    "invoiceId": {
+      "type": "string",
+      "description": "Unique invoice identifier as assigned by the source system"
+    },
+    "invoiceNumber": {
+      "type": "string",
+      "description": "Human-readable invoice number (may differ from invoiceId)"
+    },
+    "issueDate": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the invoice was issued (ISO 8601)"
+    },
+    "dueDate": {
+      "type": "string",
+      "format": "date",
+      "description": "Payment due date (ISO 8601)"
+    },
+    "status": {
+      "oneOf": [
+        {
+          "const": "draft",
+          "description": "Invoice created but not yet submitted"
+        },
+        {
+          "const": "submitted",
+          "description": "Submitted for approval"
+        },
+        {
+          "const": "approved",
+          "description": "Approved for payment"
+        },
+        {
+          "const": "paid",
+          "description": "Payment received"
+        },
+        {
+          "const": "cancelled",
+          "description": "Invoice cancelled"
+        },
+        {
+          "const": "disputed",
+          "description": "Invoice under dispute"
+        }
+      ],
+      "description": "Current invoice status"
+    },
+    "supplierId": {
+      "type": "string",
+      "description": "Identifier of the supplier or vendor"
+    },
+    "supplierName": {
+      "type": "string",
+      "description": "Name of the supplier or vendor"
+    },
+    "customerId": {
+      "type": "string",
+      "description": "Identifier of the customer being invoiced"
+    },
+    "customerName": {
+      "type": "string",
+      "description": "Name of the customer being invoiced"
+    },
+    "totalAmount": {
+      "$ref": "../../../../_common/types/monetary-amount.schema.json",
+      "description": "Total invoice amount including taxes"
+    },
+    "taxAmount": {
+      "$ref": "../../../../_common/types/monetary-amount.schema.json",
+      "description": "Total tax amount"
+    },
+    "lineItems": {
+      "type": "array",
+      "description": "Individual line items on the invoice",
+      "items": {
+        "type": "object",
+        "required": [
+          "description",
+          "quantity",
+          "unitPrice"
+        ],
+        "properties": {
+          "description": {
+            "type": "string",
+            "description": "Description of the goods or services"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Quantity of items",
+            "exclusiveMinimum": 0
+          },
+          "unitPrice": {
+            "$ref": "../../../../_common/types/monetary-amount.schema.json",
+            "description": "Price per unit"
+          },
+          "lineTotal": {
+            "$ref": "../../../../_common/types/monetary-amount.schema.json",
+            "description": "Total for this line (quantity x unitPrice)"
+          }
+        }
+      }
+    },
+    "billingAddress": {
+      "$ref": "../../../../_common/types/address.schema.json",
+      "description": "Billing address"
+    },
+    "paymentTerms": {
+      "type": "string",
+      "description": "Payment terms (e.g., Net 30, Net 60)"
+    },
+    "purchaseOrderReference": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Reference to the associated purchase order, if applicable"
+    }
+  }
+}
