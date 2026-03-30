@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:gluendo:schema:finance:invoice:v1.0.0",
+  "$id": "urn:gluendo:schema:finance:invoice:v1.1.0",
   "title": "Invoice",
   "description": "Canonical representation of an invoice entity. Produced by ERP or billing systems on invoice lifecycle events (submitted, approved, paid, cancelled).",
   "type": "object",
@@ -47,6 +47,10 @@
         {
           "const": "cancelled",
           "description": "Invoice cancelled"
+        },
+        {
+          "const": "disputed",
+          "description": "Invoice under dispute"
         }
       ],
       "description": "Current invoice status"
