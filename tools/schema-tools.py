@@ -474,30 +474,34 @@ def validate_examples(schema_dir: str) -> int:
 # Schema diff — compare two schema directory trees
 # ---------------------------------------------------------------------------
 
-def compare_schemas(old_data: dict, new_data: dict) -> list[str]:
-    """Compare two schema dicts and return a list of Markdown change lines."""
+def compare_schemas(old_data: dict, new_data: dict) -> tuple[list[str], list[str], list[str]]:
+    """Compare two schema dicts. Returns (breaking, minor, patch) change lists."""
     old_props = collect_properties(old_data)
     new_props = collect_properties(new_data)
     old_required = set(old_data.get("required", []))
     new_required = set(new_data.get("required", []))
 
-    changes: list[str] = []
+    breaking: list[str] = []
+    minor: list[str] = []
+    patch: list[str] = []
 
     added = sorted(set(new_props.keys()) - set(old_props.keys()))
     removed = sorted(set(old_props.keys()) - set(new_props.keys()))
 
     for field in added:
-        req = " **(required)**" if field in new_required else ""
-        changes.append(f"- Added `{field}`{req}")
+        if field in new_required:
+            breaking.append(f"- Added `{field}` **(required)**")
+        else:
+            minor.append(f"- Added `{field}`")
 
     for field in removed:
-        changes.append(f"- Removed `{field}`")
+        breaking.append(f"- Removed `{field}`")
 
     for field in sorted(set(old_props.keys()) & set(new_props.keys())):
         old_type = old_props[field].get("type")
         new_type = new_props[field].get("type")
         if old_type != new_type:
-            changes.append(f"- Changed `{field}` type: `{old_type}` → `{new_type}`")
+            breaking.append(f"- Changed `{field}` type: `{old_type}` → `{new_type}`")
 
         # Enum changes
         old_enum = set()
@@ -510,24 +514,65 @@ def compare_schemas(old_data: dict, new_data: dict) -> list[str]:
             added_vals = new_enum - old_enum
             removed_vals = old_enum - new_enum
             if added_vals:
-                changes.append(f"- Added enum values for `{field}`: {', '.join(f'`{v}`' for v in sorted(added_vals))}")
+                minor.append(f"- Added enum values for `{field}`: {', '.join(f'`{v}`' for v in sorted(added_vals))}")
             if removed_vals:
-                changes.append(f"- Removed enum values for `{field}`: {', '.join(f'`{v}`' for v in sorted(removed_vals))}")
+                breaking.append(f"- Removed enum values for `{field}`: {', '.join(f'`{v}`' for v in sorted(removed_vals))}")
 
     # Required changes
     added_req = new_required - old_required
     removed_req = old_required - new_required
     for field in sorted(added_req):
         if field not in added:
-            changes.append(f"- Made `{field}` **required**")
+            breaking.append(f"- Made `{field}` **required**")
     for field in sorted(removed_req):
-        changes.append(f"- Made `{field}` optional")
+        minor.append(f"- Made `{field}` optional")
 
     # Description change
     if old_data.get("description", "") != new_data.get("description", ""):
-        changes.append("- Updated description")
+        patch.append("- Updated description")
 
-    return changes
+    return breaking, minor, patch
+
+
+def format_diff_section(changes: tuple[list[str], list[str], list[str]],
+                        old_ver: str | None = None, new_ver: str | None = None) -> str:
+    """Format change lists into Markdown with a semver recommendation."""
+    breaking, minor, patch = changes
+    all_changes = breaking + minor + patch
+    if not all_changes:
+        return ""
+
+    lines = list(all_changes)
+
+    # Determine recommended bump
+    if breaking:
+        recommended = "major"
+    elif minor:
+        recommended = "minor"
+    else:
+        recommended = "patch"
+
+    # Check actual version bump if both versions are known
+    verdict = ""
+    if old_ver and new_ver:
+        try:
+            old_v = parse_version(old_ver)
+            new_v = parse_version(new_ver)
+            if recommended == "major" and new_v[0] <= old_v[0]:
+                verdict = f"\n\n> ⚠️ **Breaking changes detected** — this requires a **major** version bump (`v{old_v[0]+1}.0.0`), but `$id` is `{new_ver}`"
+            elif recommended == "minor" and new_v[0] == old_v[0] and new_v[1] <= old_v[1] and new_v[2] != old_v[2] + 1:
+                verdict = f"\n\n> ℹ️ Suggested bump: **minor** (`{old_ver}` → `v{old_v[0]}.{old_v[1]+1}.0`)"
+            elif recommended == "major":
+                verdict = "\n\n> ✅ Major version bump — breaking changes are expected"
+            # If the bump looks correct, say nothing
+        except (ValueError, IndexError):
+            pass
+
+    if not verdict:
+        label = {"major": "major ⚠️", "minor": "minor", "patch": "patch"}[recommended]
+        verdict = f"\n\n> Suggested bump: **{label}**"
+
+    return "\n".join(lines) + verdict
 
 
 def find_previous_version(head_dir: Path, key: str) -> Path | None:
@@ -611,8 +656,9 @@ def diff_schemas(base_dir: str, head_dir: str) -> str:
                     new_ver = Path(key).parts[-2]      # e.g. 'v1.2.0'
                     changes = compare_schemas(old_data, new_data)
                     header = f"### New version: `{key}`\n\n**{title}** — {prev_ver} → {new_ver}"
-                    if changes:
-                        sections.append(header + "\n\n" + "\n".join(changes))
+                    body = format_diff_section(changes, prev_ver, new_ver)
+                    if body:
+                        sections.append(header + "\n\n" + body)
                     else:
                         sections.append(header + "\n\nNo field-level changes (metadata only)")
                     continue
@@ -638,9 +684,16 @@ def diff_schemas(base_dir: str, head_dir: str) -> str:
                 continue
 
             changes = compare_schemas(old_data, new_data)
-            if changes:
+            breaking, minor, patch = changes
+            if breaking or minor or patch:
                 title = new_data.get("title", key)
-                sections.append(f"### Modified: `{key}`\n\n" + "\n".join(changes))
+                old_ver = old_data.get("$id", "").rsplit(":", 1)[-1] if ":" in old_data.get("$id", "") else None
+                new_ver = new_data.get("$id", "").rsplit(":", 1)[-1] if ":" in new_data.get("$id", "") else None
+                header = f"### Modified: `{key}`"
+                if old_ver and new_ver and old_ver != new_ver:
+                    header += f"\n\n**{title}** — {old_ver} → {new_ver}"
+                body = format_diff_section(changes, old_ver, new_ver)
+                sections.append(header + "\n\n" + body)
 
     if not sections:
         return ""
