@@ -48,14 +48,11 @@ See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide.
 ### Validate locally
 
 ```bash
-# Validate syntax, formatting, and $ref resolution
-python3 tools/schema-tools.py all
-
-# Bundle schemas (inline $ref into self-contained files)
-python3 tools/schema-tools.py bundle schemas dist
-
-# Lint with Vacuum
-./tools/lint.sh dist
+make hooks           # Install pre-commit hook (validates schemas before commit)
+make all             # Run all checks (validate, format, lint, compat)
+make build           # Build catalog + EventCatalog for production
+make preview         # Build and serve locally (mimics GitHub Pages)
+make ec-dev          # Run EventCatalog dev server
 ```
 
 ### Run the catalog locally
@@ -65,15 +62,7 @@ cd catalog && npm install && npm run dev
 # Open http://localhost:3000/schema-registry
 ```
 
-### Run EventCatalog (alternative visualization)
-
-```bash
-cd eventcatalog && npm install
-make ec-dev
-# Open http://localhost:3000
-```
-
-EventCatalog provides service dependency graphs, domain exploration, and schema visualization generated from the same `schemas/` directory.
+EventCatalog is also available at `/schema-registry/eventcatalog/` — it provides service dependency graphs, domain exploration, and schema visualization.
 
 ## Architecture decisions
 
@@ -93,20 +82,29 @@ The design is documented in [Architecture Decision Records](adr/):
 | [010](adr/010-runtime-validation-strategy.md) | Runtime validation strategy |
 | [011](adr/011-schema-catalog-app.md) | Schema catalog app (GitHub Pages) |
 
+## CI/CD
+
+| Workflow | Trigger | What it does |
+|----------|---------|--------------|
+| **Validate Schemas** | PR + push to main | Validates JSON, formatting, `$ref` targets, compatibility, version checks |
+| **Schema Diff** | PR touching `schemas/` | Posts a PR comment with field-level changes and semver recommendation |
+| **Snapshot Schemas** | Push to main | Creates frozen version snapshots from current files |
+| **Deploy Catalog** | Push to main | Builds catalog + EventCatalog, deploys to GitHub Pages |
+
 ## Repository structure
 
 ```
-adr/                    Architecture Decision Records
 schemas/
-  _common/types/        Shared types (address, monetary-amount, uuid, etag, error, tags, traceparent, ...)
-  _common/enums/        ISO enums (country codes, currency codes)
-  domains/              Domain schemas (one schema per entity per version)
-catalog/                Next.js catalog app (static export → GitHub Pages)
-eventcatalog/           EventCatalog integration (generator + config)
+  _common/              Shared types and ISO enums
+  domains/              Domain schemas (current file + version snapshots)
+adr/                    Architecture Decision Records
+catalog/                Next.js catalog app (GitHub Pages)
+eventcatalog/           EventCatalog integration (services, visualizations)
 tools/
-  schema-tools.py       Validate, format, check $refs, bundle schemas
+  schema-tools.py       Validate, format, bundle, diff, snapshot
   lint.sh               Vacuum linter wrapper
 templates/              Schema template for new entities
+.githooks/              Pre-commit hook for schema validation
 ```
 
 ## License

@@ -41,7 +41,9 @@
 ## Tooling improvements
 
 - [x] **Pre-commit hooks** — `make hooks` installs `.githooks/pre-commit` that validates schemas before commit
-- [x] **Schema diff in PRs** — GitHub Action posts field-level schema diff as PR comment via `schema-tools.py diff`
+- [x] **Schema diff in PRs** — GitHub Action posts field-level schema diff with semver recommendation as PR comment
+- [x] **Current-file workflow** — schemas edited in place with CI-managed version snapshots (natural git diffs)
+- [x] **Auto-snapshot on merge** — CI creates frozen version directories from current files on push to main
 - [ ] **Code generation** — generate TypeScript/Java/Python types from schemas (evaluate quicktype, json-schema-to-typescript, or similar)
 - [ ] **Schema deprecation tracking** — mark schemas as deprecated, show warnings in catalog, enforce deprecation timelines
 
