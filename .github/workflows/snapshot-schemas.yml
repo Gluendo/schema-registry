@@ -1,0 +1,38 @@
+name: Snapshot Schemas
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'schemas/**'
+
+permissions:
+  contents: write
+
+jobs:
+  snapshot:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+
+      - name: Snapshot current schemas
+        run: python3 tools/schema-tools.py snapshot schemas
+
+      - name: Commit snapshots
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add schemas/domains/*/*/v*/
+          if git diff --cached --quiet; then
+            echo "No new snapshots to commit"
+          else
+            git commit -m "Snapshot schema versions"
+            git push
+          fi

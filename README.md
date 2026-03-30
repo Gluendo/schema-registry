@@ -22,22 +22,25 @@ Visit the [catalog](https://gluendo.github.io/schema-registry/) or explore the `
 
 ```
 schemas/
-  _common/              # Shared types (address, monetary-amount, etc.) and enums (country codes, currencies)
+  _common/                    # Shared types and enums
   domains/
-    hr/employee/        # HR domain — employee entity
-    finance/invoice/    # Finance domain — invoice entity
+    hr/employee/
+      employee.schema.json    # Current version (edit in place)
+      policies/               # Current policies
+      v1.0.0/                 # Frozen snapshot (created by CI)
+      v1.1.0/                 # Frozen snapshot
 ```
 
 ### Add a new schema
 
 ```bash
 # 1. Create the folder structure
-mkdir -p schemas/domains/{domain}/{entity}/v1.0.0
+mkdir -p schemas/domains/{domain}/{entity}
 
 # 2. Copy the template
-cp templates/entity.schema.json schemas/domains/{domain}/{entity}/v1.0.0/{entity}.schema.json
+cp templates/entity.schema.json schemas/domains/{domain}/{entity}/{entity}.schema.json
 
-# 3. Edit, commit, open a PR
+# 3. Edit, commit, open a PR — CI snapshots the version on merge
 ```
 
 See [CONTRIBUTING.md](CONTRIBUTING.md) for the full guide.

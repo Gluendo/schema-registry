@@ -1,0 +1,129 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:gluendo:schema:supply-chain:purchase-order:v1.0.0",
+  "title": "Purchase Order",
+  "description": "Canonical representation of a purchase order entity. Produced by procurement or ERP systems on purchase order lifecycle events (created, approved, received, closed).",
+  "type": "object",
+  "required": [
+    "purchaseOrderId"
+  ],
+  "properties": {
+    "purchaseOrderId": {
+      "type": "string",
+      "description": "Unique purchase order identifier"
+    },
+    "orderNumber": {
+      "type": "string",
+      "description": "Human-readable PO number"
+    },
+    "status": {
+      "oneOf": [
+        {
+          "const": "draft",
+          "description": "PO created but not yet submitted"
+        },
+        {
+          "const": "pending-approval",
+          "description": "Submitted and awaiting approval"
+        },
+        {
+          "const": "approved",
+          "description": "Approved for fulfillment"
+        },
+        {
+          "const": "partially-received",
+          "description": "Some line items received"
+        },
+        {
+          "const": "received",
+          "description": "All line items received"
+        },
+        {
+          "const": "closed",
+          "description": "PO completed and closed"
+        },
+        {
+          "const": "cancelled",
+          "description": "PO cancelled"
+        }
+      ],
+      "description": "Current purchase order status"
+    },
+    "orderDate": {
+      "type": "string",
+      "format": "date",
+      "description": "Date the PO was created (ISO 8601)"
+    },
+    "expectedDeliveryDate": {
+      "type": "string",
+      "format": "date",
+      "description": "Expected delivery date (ISO 8601)"
+    },
+    "supplierId": {
+      "type": "string",
+      "description": "Identifier of the supplier"
+    },
+    "supplierName": {
+      "type": "string",
+      "description": "Name of the supplier"
+    },
+    "requesterId": {
+      "type": "string",
+      "description": "Identifier of the person or department that requested the purchase"
+    },
+    "shippingAddress": {
+      "$ref": "../../../_common/types/address.schema.json",
+      "description": "Delivery address"
+    },
+    "totalAmount": {
+      "$ref": "../../../_common/types/monetary-amount.schema.json",
+      "description": "Total PO amount"
+    },
+    "lineItems": {
+      "type": "array",
+      "description": "Ordered items",
+      "items": {
+        "type": "object",
+        "required": [
+          "description",
+          "quantity"
+        ],
+        "properties": {
+          "lineNumber": {
+            "type": "integer",
+            "description": "Line item number"
+          },
+          "description": {
+            "type": "string",
+            "description": "Description of the item"
+          },
+          "sku": {
+            "type": "string",
+            "description": "Stock keeping unit or product code"
+          },
+          "quantity": {
+            "type": "number",
+            "description": "Ordered quantity",
+            "exclusiveMinimum": 0
+          },
+          "unitPrice": {
+            "$ref": "../../../_common/types/monetary-amount.schema.json",
+            "description": "Price per unit"
+          },
+          "receivedQuantity": {
+            "type": "number",
+            "description": "Quantity received so far"
+          }
+        }
+      }
+    },
+    "notes": {
+      "type": "string",
+      "description": "Free-text notes or special instructions"
+    },
+    "tags": {
+      "$ref": "../../../_common/types/tags.schema.json",
+      "description": "Metadata tags for categorization"
+    }
+  }
+}

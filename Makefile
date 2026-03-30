@@ -1,4 +1,4 @@
-.PHONY: validate format lint bundle compat examples all dev build preview clean ec-generate ec-dev ec-build hooks
+.PHONY: validate format lint bundle compat examples all dev build preview clean ec-generate ec-dev ec-build hooks snapshot
 
 # Install git hooks
 hooks:
@@ -56,6 +56,10 @@ demo-produce:
 
 demo-produce-invalid:
 	$(MAKE) -C demo produce-invalid
+
+# Snapshot current schemas into version directories
+snapshot:
+	python3 tools/schema-tools.py snapshot schemas
 
 # EventCatalog (generate from schemas, then dev/build)
 ec-generate:

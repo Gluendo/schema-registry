@@ -14,10 +14,10 @@ The **platform team** maintains common types (`schemas/_common/`) and reviews al
 
 ```bash
 # Create the folder structure
-mkdir -p schemas/domains/{domain}/{entity}/v1.0.0
+mkdir -p schemas/domains/{domain}/{entity}
 
 # Copy and customize the template
-cp templates/entity.schema.json schemas/domains/{domain}/{entity}/v1.0.0/{entity}.schema.json
+cp templates/entity.schema.json schemas/domains/{domain}/{entity}/{entity}.schema.json
 ```
 
 ### 2. Fill in the schema
@@ -41,7 +41,7 @@ Remember:
 If the entity has multiple audiences, add projection policies:
 
 ```bash
-mkdir -p schemas/domains/{domain}/{entity}/v1.0.0/policies
+mkdir -p schemas/domains/{domain}/{entity}/policies
 ```
 
 See [ADR-009](adr/009-audience-segmentation.md) for the policy-as-code approach.
@@ -53,31 +53,27 @@ See [ADR-009](adr/009-audience-segmentation.md) for the policy-as-code approach.
 - Ensure CI passes (linting, validation)
 - Request review from the platform team and your domain's code owners
 
+On merge, CI automatically creates a frozen version snapshot in `v1.0.0/`.
+
 ## Modifying an existing schema
 
 ### Backward-compatible changes (minor version)
 
 Adding a new **optional** field, updating descriptions, or adding examples:
 
-```bash
-# Create the new version folder
-cp -r schemas/domains/{domain}/{entity}/v1.0.0 schemas/domains/{domain}/{entity}/v1.1.0
+1. Edit the current file directly: `schemas/domains/{domain}/{entity}/{entity}.schema.json`
+2. Update `$id` to the new version: `urn:gluendo:schema:{domain}:{entity}:v1.1.0`
+3. Open a PR — git shows a clean diff of exactly what changed
 
-# Edit the new version
-# Update $id to match: urn:gluendo:schema:{domain}:{entity}:v1.1.0
-```
+On merge, CI snapshots the current file into `v1.1.0/` automatically.
 
 ### Breaking changes (major version)
 
 Removing a field, changing a type, or making an optional field required:
 
-```bash
-# Create the new major version
-cp -r schemas/domains/{domain}/{entity}/v1.1.0 schemas/domains/{domain}/{entity}/v2.0.0
-
-# Edit the new version
-# Update $id to match: urn:gluendo:schema:{domain}:{entity}:v2.0.0
-```
+1. Edit the current file directly
+2. Update `$id` to the new major version: `urn:gluendo:schema:{domain}:{entity}:v2.0.0`
+3. Open a PR with a migration plan
 
 Breaking changes require:
 - A migration plan documented in the PR description
@@ -85,6 +81,15 @@ Breaking changes require:
 - Approval from the platform team
 
 See [ADR-004](adr/004-versioning-and-compatibility.md) for full versioning rules.
+
+## How versioning works
+
+Each entity has two kinds of schema files:
+
+- **Current file** (`{entity}.schema.json`) — the working copy you edit in place. Git tracks all changes naturally.
+- **Version snapshots** (`v1.0.0/{entity}.schema.json`) — frozen copies created by CI on merge. Never edit these directly.
+
+Version snapshots preserve the full history and serve as stable references for consumers. The current file is the single source of truth for the latest version.
 
 ## Naming conventions
 
@@ -117,7 +122,7 @@ Reusable types are in `schemas/_common/types/` and enums in `schemas/_common/enu
 ```json
 {
   "homeAddress": {
-    "$ref": "../../../../_common/types/address.schema.json"
+    "$ref": "../../../_common/types/address.schema.json"
   }
 }
 ```

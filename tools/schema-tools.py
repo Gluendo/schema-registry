@@ -11,6 +11,7 @@ Usage:
     python3 tools/schema-tools.py examples <dir>        # Validate example payloads against schemas
     python3 tools/schema-tools.py all <dir>             # Run validate + format --check + refs + compat
     python3 tools/schema-tools.py diff <base> <head>    # Compare two schema trees (Markdown output)
+    python3 tools/schema-tools.py snapshot <dir>        # Snapshot current schemas into version directories
 """
 
 import json
@@ -648,6 +649,152 @@ def diff_schemas(base_dir: str, head_dir: str) -> str:
 
 
 # ---------------------------------------------------------------------------
+# Snapshot — freeze current schemas into versioned directories
+# ---------------------------------------------------------------------------
+
+def adjust_refs_for_snapshot(obj):
+    """Recursively walk a JSON structure and prepend ../ to every relative $ref value."""
+    if isinstance(obj, dict):
+        result = {}
+        for k, v in obj.items():
+            if k == "$ref" and isinstance(v, str) and v.startswith("../"):
+                result[k] = "../" + v
+            else:
+                result[k] = adjust_refs_for_snapshot(v)
+        return result
+    elif isinstance(obj, list):
+        return [adjust_refs_for_snapshot(item) for item in obj]
+    return obj
+
+
+def snapshot_schemas(schema_dir: str) -> int:
+    """Snapshot current schemas into versioned directories. Returns count of snapshots created."""
+    import re
+    import shutil
+
+    domains_dir = Path(schema_dir) / "domains"
+    if not domains_dir.is_dir():
+        print("  No domains/ directory found")
+        return 0
+
+    count = 0
+
+    for domain_dir in sorted(domains_dir.iterdir()):
+        if not domain_dir.is_dir():
+            continue
+        for entity_dir in sorted(domain_dir.iterdir()):
+            if not entity_dir.is_dir():
+                continue
+
+            entity_name = entity_dir.name
+            current_file = entity_dir / f"{entity_name}.schema.json"
+            if not current_file.is_file():
+                continue
+
+            try:
+                raw = current_file.read_text(encoding="utf-8")
+                data = json.loads(raw)
+            except (json.JSONDecodeError, OSError) as e:
+                print(f"  FAIL: {current_file} — {e}")
+                continue
+
+            # Extract version from $id
+            schema_id = data.get("$id", "")
+            match = re.search(r":v(\d+\.\d+\.\d+)$", schema_id)
+            if not match:
+                print(f"  SKIP: {current_file} — no version found in $id")
+                continue
+
+            version = match.group(1)
+            version_dir = entity_dir / f"v{version}"
+
+            if version_dir.exists():
+                continue
+
+            # Create version directory and write adjusted schema
+            version_dir.mkdir(parents=True, exist_ok=True)
+            adjusted = adjust_refs_for_snapshot(data)
+            out_path = version_dir / f"{entity_name}.schema.json"
+            out_path.write_text(
+                json.dumps(adjusted, indent=2, ensure_ascii=False) + "\n",
+                encoding="utf-8",
+            )
+
+            domain_name = domain_dir.name
+            print(f"  SNAPSHOT: {domain_name}/{entity_name} v{version}")
+
+            # Copy policies/ if it exists
+            policies_dir = entity_dir / "policies"
+            if policies_dir.is_dir():
+                dest_policies = version_dir / "policies"
+                shutil.copytree(policies_dir, dest_policies)
+                print(f"  COPIED:   {domain_name}/{entity_name}/policies/ -> v{version}/policies/")
+
+            count += 1
+
+    return count
+
+
+def check_current_version(schema_dir: str) -> int:
+    """Check that current schema versions are strictly greater than latest snapshot. Returns error count."""
+    import re
+
+    domains_dir = Path(schema_dir) / "domains"
+    if not domains_dir.is_dir():
+        return 0
+
+    errors = 0
+
+    for domain_dir in sorted(domains_dir.iterdir()):
+        if not domain_dir.is_dir():
+            continue
+        for entity_dir in sorted(domain_dir.iterdir()):
+            if not entity_dir.is_dir():
+                continue
+
+            entity_name = entity_dir.name
+            current_file = entity_dir / f"{entity_name}.schema.json"
+            if not current_file.is_file():
+                continue
+
+            try:
+                data = json.loads(current_file.read_text(encoding="utf-8"))
+            except (json.JSONDecodeError, OSError):
+                continue
+
+            schema_id = data.get("$id", "")
+            match = re.search(r":v(\d+\.\d+\.\d+)$", schema_id)
+            if not match:
+                continue
+
+            current_ver = parse_version(f"v{match.group(1)}")
+
+            # Find latest existing snapshot version
+            versions = []
+            for d in entity_dir.iterdir():
+                if d.is_dir() and d.name.startswith("v"):
+                    try:
+                        versions.append(parse_version(d.name))
+                    except (ValueError, IndexError):
+                        continue
+
+            if not versions:
+                continue
+
+            latest = max(versions)
+            domain_name = domain_dir.name
+
+            if current_ver < latest:
+                print(f"  FAIL: {domain_name}/{entity_name} — current version v{match.group(1)} is older than snapshot v{'.'.join(str(x) for x in latest)}")
+                errors += 1
+            elif current_ver == latest:
+                # Equal is fine — it means the current file matches the latest snapshot
+                pass
+
+    return errors
+
+
+# ---------------------------------------------------------------------------
 # Main
 # ---------------------------------------------------------------------------
 
@@ -681,6 +828,12 @@ def main():
         if output:
             print(output)
         sys.exit(0)
+
+    if command == "snapshot":
+        print(f"==> Snapshotting current schemas in {dir_arg}/")
+        count = snapshot_schemas(dir_arg)
+        print(f"==> {count} schema(s) snapshotted")
+        return
 
     if not Path(dir_arg).is_dir():
         print(f"ERROR: {dir_arg} is not a directory")
@@ -765,7 +918,16 @@ def main():
         if errors:
             print(f"==> {errors} breaking change(s) found in minor/patch bumps")
             sys.exit(1)
-        print("==> All version transitions are backward-compatible")
+        print("==> All version transitions are backward-compatible\n")
+
+        print("==> Checking current schema versions")
+        errors = check_current_version(dir_arg)
+        if errors:
+            print(f"==> {errors} version issue(s) found")
+            sys.exit(1)
+        print("==> All current schema versions are valid\n")
+
+        print("==> All checks passed")
 
     else:
         print(f"Unknown command: {command}")

@@ -1,0 +1,86 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:gluendo:schema:crm:customer:v1.0.0",
+  "title": "Customer",
+  "description": "Canonical representation of a customer entity. Produced by CRM systems (e.g., Salesforce, HubSpot, custom CRM) on customer lifecycle events (created, updated, churned).",
+  "type": "object",
+  "required": [
+    "customerId"
+  ],
+  "properties": {
+    "customerId": {
+      "type": "string",
+      "description": "Unique customer identifier"
+    },
+    "companyName": {
+      "type": "string",
+      "description": "Legal company or organization name"
+    },
+    "tradingName": {
+      "type": "string",
+      "description": "Trading or brand name, if different from legal name"
+    },
+    "status": {
+      "oneOf": [
+        {
+          "const": "prospect",
+          "description": "Potential customer, not yet converted"
+        },
+        {
+          "const": "active",
+          "description": "Active paying customer"
+        },
+        {
+          "const": "inactive",
+          "description": "Customer with no recent activity"
+        },
+        {
+          "const": "churned",
+          "description": "Former customer who has left"
+        }
+      ],
+      "description": "Current customer lifecycle status"
+    },
+    "industry": {
+      "type": "string",
+      "description": "Industry or sector the customer operates in"
+    },
+    "website": {
+      "type": "string",
+      "format": "uri",
+      "description": "Customer website URL"
+    },
+    "primaryContact": {
+      "$ref": "../../../_common/types/contact-info.schema.json",
+      "description": "Primary contact person"
+    },
+    "billingAddress": {
+      "$ref": "../../../_common/types/address.schema.json",
+      "description": "Billing address"
+    },
+    "shippingAddress": {
+      "$ref": "../../../_common/types/address.schema.json",
+      "description": "Shipping address, if different from billing"
+    },
+    "taxId": {
+      "type": "string",
+      "description": "Tax identification number (VAT, EIN, etc.)"
+    },
+    "accountManagerId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "description": "Identifier of the assigned account manager"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time",
+      "description": "Timestamp when the customer record was created (ISO 8601)"
+    },
+    "tags": {
+      "$ref": "../../../_common/types/tags.schema.json",
+      "description": "Metadata tags for segmentation and filtering"
+    }
+  }
+}

@@ -23,8 +23,8 @@
       "description": "Timestamp when the {{entity}} was created (ISO 8601)"
     },
     "address": {
-      "$ref": "../../../../_common/types/address.schema.json",
-      "description": "Associated address (adjust $ref depth to match your schema location)"
+      "$ref": "../../../_common/types/address.schema.json",
+      "description": "Associated address"
     }
   }
 }
