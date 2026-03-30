@@ -1,6 +1,6 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
-  "$id": "urn:gluendo:schema:hr:employee:v1.1.0",
+  "$id": "urn:gluendo:schema:hr:employee:v1.2.0",
   "title": "Employee",
   "description": "Canonical representation of an employee entity. Produced by HR systems (e.g., Workday, SAP HCM) on employee lifecycle events (created, updated, terminated).",
   "type": "object",
@@ -106,6 +106,23 @@
         "null"
       ],
       "description": "Employee ID of the direct manager, if applicable"
+    },
+    "workLocation": {
+      "oneOf": [
+        {
+          "const": "office",
+          "description": "Works from office"
+        },
+        {
+          "const": "remote",
+          "description": "Works remotely"
+        },
+        {
+          "const": "hybrid",
+          "description": "Hybrid work arrangement"
+        }
+      ],
+      "description": "Employee's primary work location type"
     }
   }
 }
